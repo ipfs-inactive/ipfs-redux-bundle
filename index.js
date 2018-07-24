@@ -3,7 +3,7 @@ const getIpfs = require('window.ipfs-fallback')
 
 const defaultState = {
   apiAddress: '/ip4/127.0.0.1/tcp/5001',
-  ipfsReady: false,
+  ipfsReady: false
 }
 
 module.exports = {
