@@ -1,0 +1,34 @@
+{
+  "name": "ipfs-redux-bundle",
+  "version": "1.0.0",
+  "description": "A redux bundle to create an IPFS instance",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ipfs-shipyard/ipfs-redux-bundle.git"
+  },
+  "keywords": [
+    "ipfs",
+    "redux",
+    "bundle"
+  ],
+  "author": "olizilla <oli@tableflip.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ipfs-shipyard/ipfs-redux-bundle/issues"
+  },
+  "homepage": "https://github.com/ipfs-shipyard/ipfs-redux-bundle#readme",
+  "dependencies": {
+    "window-or-global": "^1.0.1",
+    "window.ipfs-fallback": "^1.1.0"
+  },
+  "devDependencies": {
+    "jest": "^23.4.1",
+    "redux-bundler": "^21.2.2",
+    "standard": "^11.0.1"
+  }
+}
