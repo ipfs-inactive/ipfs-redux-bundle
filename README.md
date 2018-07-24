@@ -4,15 +4,13 @@
 
 [![](https://img.shields.io/badge/project-IPFS-blue.svg)](http://ipfs.io/) [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg)](http://webchat.freenode.net/?channels=%23ipfs) [![Build Status](https://travis-ci.org/ipfs-shipyard/ipfs-redux-bundle.svg?branch=master)](https://travis-ci.org/ipfs-shipyard/ipfs-redux-bundle)
 
-
-
 See https://reduxbundler.com for more info on the wonders of redux bundles.
 
 Uses [`window.ipfs-fallback`](https://github.com/tableflip/window.ipfs-fallback) to find the best IPFS instance available. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
 
 ## Usage
 
-Add ipfs-redux-bundle to your store
+Add `ipfs-redux-bundle` to your store
 
 **bundles/index.js**
 
@@ -27,7 +25,7 @@ export default composeBundles(
 )
 ```
 
-In you app, you can now connect in a doInitIpfs function. Here we init IPFS when our root component mounts.
+In your app, you can now `connect` up the `doInitIpfs` function. Here we init IPFS when our root component mounts:
 
 **App.js**
 
