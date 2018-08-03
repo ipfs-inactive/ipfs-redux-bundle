@@ -1,28 +1,9 @@
 const root = require('window-or-global')
 const getIpfs = require('window.ipfs-fallback')
-const { createSelector } = require('redux-bundler')
 
 const defaultState = {
   apiAddress: '/ip4/127.0.0.1/tcp/5001',
-  gatewayUrl: 'https://ipfs.io',
   identity: null
-}
-
-function getURL (dispatch, getIpfs, action, addr) {
-  dispatch({ type: `IPFS_${action}_STARTED` })
-
-  getIpfs().config.get(`Addresses.${addr}`, (err, res) => {
-    if (err) {
-      console.log(err)
-      dispatch({ type: `IPFS_${action}_ERRORED`, payload: err })
-      return
-    }
-
-    const split = res.split('/')
-    const url = '//' + split[2] + ':' + split[4]
-
-    dispatch({ type: `IPFS_${action}_FINISHED`, payload: url })
-  })
 }
 
 module.exports = {
@@ -40,14 +21,6 @@ module.exports = {
 
     if (type === 'IPFS_API_UPDATED') {
       return Object.assign({}, state, { apiAddress: payload })
-    }
-
-    if (type === 'IPFS_GATEWAY_URL_FINISHED') {
-      return Object.assign({}, state, { gatewayUrl: payload })
-    }
-
-    if (type === 'IPFS_API_URL_FINISHED') {
-      return Object.assign({}, state, { apiUrl: payload })
     }
 
     return state
@@ -80,20 +53,5 @@ module.exports = {
   doUpdateIpfsAPIAddress: (apiAddress) => ({dispatch, store}) => {
     dispatch({type: 'IPFS_API_UPDATED', payload: apiAddress})
     store.doInitIpfs()
-  },
-
-  doGetIpfsUrls: () => ({ dispatch, getIpfs }) => {
-    getURL(dispatch, getIpfs, 'GATEWAY_URL', 'Gateway')
-    getURL(dispatch, getIpfs, 'API_URL', 'API')
-  },
-
-  // Fetch the config if we don't have it or it's more than `staleAfter` ms old
-  reactGetIpfsUrls: createSelector(
-    'selectIpfsReady',
-    (ipfsReady) => {
-      if (ipfsReady) {
-        return { actionCreator: 'doGetIpfsUrls' }
-      }
-    }
-  )
+  }
 }
