@@ -11,7 +11,7 @@ it('should initialise IPFS', (done) => {
     id: jest.fn().mockResolvedValue(testIdentity)
   })
   const store = composeBundlesRaw(
-    ipfsBundle
+    ipfsBundle()
   )()
 
   expect(store.selectIpfsReady()).toBe(false)
