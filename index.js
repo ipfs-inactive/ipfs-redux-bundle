@@ -1,4 +1,3 @@
-const root = require('window-or-global')
 const getIpfs = require('window.ipfs-fallback')
 
 const defaultState = {
@@ -9,6 +8,7 @@ const defaultState = {
 
 module.exports = function () {
   let ready = false
+  let ipfs = null
 
   return {
     name: 'ipfs',
@@ -43,7 +43,7 @@ module.exports = function () {
     },
 
     getExtraArgs () {
-      return { getIpfs: () => root.ipfs }
+      return { getIpfs: () => ipfs }
     },
 
     selectIpfsReady: () => ready,
@@ -61,9 +61,9 @@ module.exports = function () {
       let identity = null
 
       try {
-        root.ipfs = await getIpfs({ api: true, ipfs: apiAddress })
+        ipfs = await getIpfs({ api: true, ipfs: apiAddress })
         // will fail if remote api is not available on default port
-        identity = await root.ipfs.id()
+        identity = await ipfs.id()
       } catch (error) {
         return dispatch({ type: 'IPFS_INIT_FAILED', error })
       }
@@ -72,11 +72,7 @@ module.exports = function () {
     },
 
     doUpdateIpfsAPIAddress: (apiAddress) => ({dispatch, store}) => {
-      // root.ipfs needs to be set to null so getIpfs doesn't
-      // use the previous connection.
-      root.ipfs = null
       ready = false
-
       dispatch({type: 'IPFS_API_UPDATED', payload: apiAddress})
       store.doInitIpfs()
     }
