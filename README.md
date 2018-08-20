@@ -58,7 +58,7 @@ Adds the following methods to the redux store
 
 #### `store.selectIpfsInitFailed()`
 
-- `boolean` - Did the IPFS instance failed to start?
+- `boolean` - Did the IPFS instance fail to start?
 
 #### `store.selectIpfsIdentity()`
 
