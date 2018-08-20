@@ -20,7 +20,7 @@ import ipfsBundle from 'ipfs-redux-bundle'
 // ... import other bundles
 
 export default composeBundles(
-  ipfsBundle
+  ipfsBundle()
   // ... add bundles here
 )
 ```
@@ -56,13 +56,25 @@ Adds the following methods to the redux store
 
 - `boolean` - Is the IPFS instance ready to use yet?
 
+#### `store.selectIpfsInitFailed()`
+
+- `boolean` - Did the IPFS instance fail to start?
+
 #### `store.selectIpfsIdentity()`
 
 - `Object` - The last resolved value of `ipfs.id()`
 
+#### `store.selectIpfsApiAddress()`
+
+- `string` - The API address of the IPFS instance.
+
 #### `store.doInitIpfs()`
 
 - Create a new IPFS instance. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
+
+### `store.doUpdateIpfsAPIAddress(address)`
+
+- Updates the API Address to `address`.
 
 ## Contribute
 
