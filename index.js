@@ -1,9 +1,12 @@
 const getIpfs = require('window.ipfs-fallback')
-const store = require('store')
-const STORE_KEY = 'ipfs-api-address'
+const global = require('window-or-global')
+
+const localStorage = global.localStorage
+const getAddress = () => localStorage ? localStorage.getItem('ipfs-api-address') : null
+const persistAddress = (val) => localStorage ? localStorage.setItem('ipfs-api-address', val) : null
 
 const defaultState = {
-  apiAddress: store.get(STORE_KEY) || '/ip4/127.0.0.1/tcp/5001',
+  apiAddress: getAddress() || '/ip4/127.0.0.1/tcp/5001',
   identity: null,
   error: null,
   ready: false
@@ -60,7 +63,7 @@ module.exports = () => {
         // will fail if remote api is not available on default port
         identity = await ipfs.id()
         // if it works, save the address for the next time
-        store.set(STORE_KEY, apiAddress)
+        persistAddress(apiAddress)
       } catch (error) {
         return dispatch({ type: 'IPFS_INIT_FAILED', error })
       }
