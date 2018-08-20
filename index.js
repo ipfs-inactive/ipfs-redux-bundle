@@ -3,7 +3,7 @@ const store = require('store')
 const STORE_KEY = 'ipfs-api-address'
 
 const defaultState = {
-  apiAddress: '/ip4/127.0.0.1/tcp/5001' || store.get(STORE_KEY),
+  apiAddress: store.get(STORE_KEY) || '/ip4/127.0.0.1/tcp/5001',
   identity: null,
   error: null,
   ready: false
