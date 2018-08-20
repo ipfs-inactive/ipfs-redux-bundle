@@ -1,4 +1,7 @@
-const getIpfs = require('window.ipfs-fallback')
+'use strict'
+/* eslint-env browser, webextensions */
+
+const windowIpfsFallback = require('window.ipfs-fallback')
 const root = require('window-or-global')
 
 const localStorage = root.localStorage
@@ -14,6 +17,20 @@ const defaultState = {
 
 module.exports = () => {
   let ipfs = null
+
+  async function getIpfs (args) {
+    // Opportunistic optimizations when running from ipfs-companion (+ ipfs-desktop in future)
+    if (typeof browser === 'object') {
+      // Note: under some vendors getBackgroundPage() will return null if window is in incognito mode
+      const webExt = await browser.runtime.getBackgroundPage()
+      // If extension is ipfs-companion exposing IPFS API, use it directly for best performance
+      if (webExt && webExt.ipfsCompanion && webExt.ipfsCompanion.ipfs) {
+        return webExt.ipfsCompanion.ipfs
+      }
+    }
+    // Usual route: window.ipfs-fallback
+    return windowIpfsFallback(args)
+  }
 
   return {
     name: 'ipfs',
