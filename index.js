@@ -15,11 +15,6 @@ module.exports = () => {
   return {
     name: 'ipfs',
 
-    persistActions: [
-      'IPFS_INIT_FINISHED',
-      'IPFS_API_UPDATED'
-    ],
-
     reducer (state, {type, payload, error}) {
       state = state || defaultState
 
