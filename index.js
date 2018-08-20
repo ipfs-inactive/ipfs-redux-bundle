@@ -1,7 +1,7 @@
 const getIpfs = require('window.ipfs-fallback')
-const global = require('window-or-global')
+const root = require('window-or-global')
 
-const localStorage = global.localStorage
+const localStorage = root.localStorage
 const getAddress = () => localStorage ? localStorage.getItem('ipfs-api-address') : null
 const persistAddress = (val) => localStorage ? localStorage.setItem('ipfs-api-address', val) : null
 
