@@ -1,13 +1,15 @@
 const getIpfs = require('window.ipfs-fallback')
+const store = require('store')
+const STORE_KEY = 'ipfs-api-address'
 
 const defaultState = {
-  apiAddress: '/ip4/127.0.0.1/tcp/5001',
+  apiAddress: '/ip4/127.0.0.1/tcp/5001' || store.get(STORE_KEY),
   identity: null,
-  error: null
+  error: null,
+  ready: false
 }
 
-module.exports = function () {
-  let ready = false
+module.exports = () => {
   let ipfs = null
 
   return {
@@ -26,17 +28,15 @@ module.exports = function () {
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        ready = true
-        return Object.assign({}, state, { identity: payload })
+        return Object.assign({}, state, { ready: true, identity: payload })
       }
 
       if (type === 'IPFS_INIT_FAILED') {
-        ready = false
-        return Object.assign({}, state, { error: error })
+        return Object.assign({}, state, { ready: false, error: error })
       }
 
       if (type === 'IPFS_API_UPDATED') {
-        return Object.assign({}, state, { apiAddress: payload, error: null })
+        return Object.assign({}, state, { ready: false, apiAddress: payload, error: null })
       }
 
       return state
@@ -46,7 +46,7 @@ module.exports = function () {
       return { getIpfs: () => ipfs }
     },
 
-    selectIpfsReady: () => ready,
+    selectIpfsReady: state => state.ipfs.ready,
 
     selectIpfsApiAddress: state => state.ipfs.apiAddress,
 
@@ -64,6 +64,8 @@ module.exports = function () {
         ipfs = await getIpfs({ api: true, ipfs: apiAddress })
         // will fail if remote api is not available on default port
         identity = await ipfs.id()
+        // if it works, save the address for the next time
+        store.set(STORE_KEY, apiAddress)
       } catch (error) {
         return dispatch({ type: 'IPFS_INIT_FAILED', error })
       }
@@ -72,7 +74,6 @@ module.exports = function () {
     },
 
     doUpdateIpfsAPIAddress: (apiAddress) => ({dispatch, store}) => {
-      ready = false
       dispatch({type: 'IPFS_API_UPDATED', payload: apiAddress})
       store.doInitIpfs()
     }

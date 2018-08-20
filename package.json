@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/ipfs-shipyard/ipfs-redux-bundle#readme",
   "dependencies": {
+    "store": "^2.0.12",
     "window.ipfs-fallback": "^1.1.0"
   },
   "devDependencies": {
