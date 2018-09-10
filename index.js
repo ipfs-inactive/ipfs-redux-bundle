@@ -1,12 +1,7 @@
 'use strict'
 /* eslint-env browser, webextensions */
 
-const windowIpfsFallback = require('window.ipfs-fallback')
 const root = require('window-or-global')
-
-const localStorage = root.localStorage
-const getAddress = () => localStorage ? localStorage.getItem('ipfs-api-address') : null
-const persistAddress = (val) => localStorage ? localStorage.setItem('ipfs-api-address', val) : null
 
 const defaultState = {
   apiOpts: {
@@ -42,7 +37,7 @@ module.exports = (fallbackToJsIpfs = true) => {
       }
 
       if (type === 'IPFS_API_UPDATED') {
-        return Object.assign({}, state, { ready: false, apiAddress: payload, error: null })
+        return Object.assign({}, state, { ready: false, apiOpts: payload, error: null })
       }
 
       return state
@@ -68,67 +63,66 @@ module.exports = (fallbackToJsIpfs = true) => {
       let apiOpts
       let res
 
-      apiOpts = getParam('ipfsApi')
+      const leave = (payload) => {
+        if (payload.ipfs) {
+          ipfs = payload.ipfs
+          delete payload.ipfs
+        }
+
+        dispatch({type: 'IPFS_INIT_FINISHED', payload})
+      }
+
+      // tries to connect to the API address sent through the URL
+      const params = new URLSearchParams(window.location.search)
+      apiOpts = params.get('ipfsApi')
 
       if (apiOpts) {
         res = await tryJsIpfsApi(apiOpts)
 
         if (res) {
-          ifps = res.ipfs
-
-          return dispatch({
-            type: 'IPFS_INIT_FINISHED',
-            payload: {
-              identity: res.identity,
-              provider: 'js-ipfs-api',
-              apiOpts
-            }
+          return leave({
+            ...res,
+            provider: 'js-ipfs-api',
+            apiOpts
           })
         }
       }
 
+      // tries window.ipfs
       res = await tryWindow()
       if (res) {
-        ifps = res.ipfs
-
-        return dispatch({
-          type: 'IPFS_INIT_FINISHED',
-          payload: {
-            identity: res.identity,
-            provider: 'window.ipfs'
-          }
+        return leave({
+          ...res,
+          provider: 'window.ipfs'
         })
       }
 
-      apiOpts = Object.assign({}, getState().ipfs.apiOpts, getUserOpts('ipfsApi'))
+      // tries js-ipfs-api
+      apiOpts = getState().ipfs.apiOpts
+
+      if (typeof apiOpts === 'object') {
+        apiOpts = Object.assign({}, apiOpts, getUserOpts('ipfsApi'))
+      }
+
       res = await tryJsIpfsApi(apiOpts)
 
       if (res) {
-        ifps = res.ipfs
-
-        return dispatch({
-          type: 'IPFS_INIT_FINISHED',
-          payload: {
-            identity: res.identity,
-            provider: 'js-ipfs-api',
-            apiOpts
-          }
+        return leave({
+          ...res,
+          provider: 'js-ipfs-api',
+          apiOpts
         })
       }
 
+      // tries js-ipfs if enabled
       if (fallbackToJsIpfs) {
         const opts = getUserOpts('ipfsOpts')
         res = await tryJsIpfs(opts)
 
         if (res) {
-          ifps = res.ipfs
-  
-          return dispatch({
-            type: 'IPFS_INIT_FINISHED',
-            payload: {
-              identity: res.identity,
-              provider: 'js-ipfs'
-            }
+          return leave({
+            ...res,
+            provider: 'js-ipfs'
           })
         }  
       }
@@ -136,8 +130,9 @@ module.exports = (fallbackToJsIpfs = true) => {
       dispatch({ type: 'IPFS_INIT_FAILED', error })
     },
 
-    doUpdateIpfsAPIAddress: (apiAddress) => ({dispatch, store}) => {
-      dispatch({type: 'IPFS_API_UPDATED', payload: apiAddress})
+    doUpdateIpfsApiOpts: (opts) => ({dispatch, store}) => {
+      dispatch({ type: 'IPFS_API_UPDATED', payload: opts })
+      saveUserOpts('ipfsApi', opts)
       store.doInitIpfs()
     }
   }
@@ -217,7 +212,7 @@ async function tryJsIpfs (opts) {
 }
 
 function getUserOpts (key) {
-  let userOpts = {}
+  let userOpts = null
   if (root.localStorage) {
     try {
       const optsStr = root.localStorage.getItem(key) || '{}'
@@ -229,15 +224,20 @@ function getUserOpts (key) {
   return userOpts
 }
 
+function saveUserOpts (key, val) {
+  if (root.localStorage) {
+    try {
+      root.localStorage.setItem(key, JSON.stringify(val))
+    } catch (error) {
+      console.log(`Error writing '${key}' value to localStorage`, error)
+    }
+  }
+}
+
 function initJsIpfs (Ipfs, opts) {
   return new Promise((resolve, reject) => {
     const ipfs = new Ipfs(opts)
     ipfs.once('ready', () => resolve(ipfs))
     ipfs.once('error', err => reject(err))
   })
-}
-
-function getParam (key) {
-  const params = new URLSearchParams(window.location.search)
-  return params.get(key)
 }
