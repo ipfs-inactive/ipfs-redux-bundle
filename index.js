@@ -32,23 +32,26 @@ module.exports = (opts = {}) => {
   async function getIpfs (opts = {}, { getState, dispatch }) {
     dispatch({ type: 'IPFS_INIT_STARTED' })
 
-    const leave = (payload) => {
-      if (payload.ipfs) {
-        ipfs = payload.ipfs
-        delete payload.ipfs
+    const leave = (provider, res, apiOpts) => {
+      ipfs = res.ipfs
+
+      const payload = {
+        provider,
+        identity: res.identity
       }
 
-      dispatch({type: 'IPFS_INIT_FINISHED', payload})
+      if (apiOpts) {
+        payload.apiOpts = apiOpts
+      }
+
+      dispatch({ type: 'IPFS_INIT_FINISHED', payload })
     }
 
     // tries window.ipfs
     if (opts.tryWindow) {
       const res = await tryWindow()
       if (res) {
-        return leave({
-          ...res,
-          provider: 'window.ipfs'
-        })
+        return leave('window.ipfs', res)
       }
     }
 
@@ -61,13 +64,8 @@ module.exports = (opts = {}) => {
       }
 
       const res = await tryApi(apiOpts)
-
       if (res) {
-        return leave({
-          ...res,
-          provider: 'js-ipfs-api',
-          apiOpts
-        })
+        return leave('js-ipfs-api', res, apiOpts)
       }
     }
 
@@ -77,10 +75,7 @@ module.exports = (opts = {}) => {
       const res = await tryJsIpfs(opts.Ipfs, ipfsOpts)
 
       if (res) {
-        return leave({
-          ...res,
-          provider: 'js-ipfs'
-        })
+        return leave('js-ipfs', res)
       }
     }
 
@@ -90,7 +85,7 @@ module.exports = (opts = {}) => {
   return {
     name: 'ipfs',
 
-    reducer (state, {type, payload}) {
+    reducer (state, { type, payload }) {
       state = state || defaultState
 
       if (type === 'IPFS_INIT_STARTED') {
@@ -98,7 +93,7 @@ module.exports = (opts = {}) => {
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        return Object.assign({}, state, { ready: true, ...payload })
+        return Object.assign({}, state, { ready: true }, payload)
       }
 
       if (type === 'IPFS_INIT_FAILED') {
@@ -120,14 +115,14 @@ module.exports = (opts = {}) => {
 
     selectIpfsProvider: state => state.ipfs.provider,
 
-    selectIpfsApiAddress: state => state.ipfs.apiAddress,
+    selectIpfsApiOpts: state => state.ipfs.apiOpts,
 
     selectIpfsInitFailed: state => state.ipfs.failed,
 
     selectIpfsIdentity: state => state.ipfs.identity,
 
     doInitIpfs: () => async (store) => {
-      getIpfs(opts, store)
+      await getIpfs(opts, store)
     },
 
     doUpdateIpfsApiOpts: (opts) => (store) => {
@@ -139,26 +134,6 @@ module.exports = (opts = {}) => {
         tryJsIpfs: false
       }), store)
     }
-  }
-}
-
-async function tryApi (opts) {
-  try {
-    console.time('IPFS_INIT_API')
-    console.log('Trying ipfs-api', opts)
-
-    console.info('🎛️ Customise your js-ipfs-api options by setting:')
-    console.info('\t1. an address in the URL with `ipfsApi` param. e.g. ?ipfsApi=/ip4/127.0.0.1/tcp/5001')
-    console.info('\t2. a `ipfsApi` value in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify({port: \'1337\'}))')
-
-    const ipfs = new IpfsApi(opts)
-    const identity = await ipfs.id()
-
-    console.log('js-ipfs-api ready!')
-    console.timeEnd('IPFS_INIT_API')
-    return { ipfs, identity }
-  } catch (error) {
-    console.log('No ipfs-api found', error)
   }
 }
 
@@ -189,6 +164,26 @@ async function tryWindow () {
     }
   } else {
     console.log('No window.ipfs found. Consider Installing the IPFS Companion web extension - https://github.com/ipfs-shipyard/ipfs-companion')
+  }
+}
+
+async function tryApi (opts) {
+  try {
+    console.time('IPFS_INIT_API')
+    console.log('Trying ipfs-api', opts)
+
+    console.info('🎛️ Customise your js-ipfs-api options by setting:')
+    console.info('\t1. an address in the URL with `ipfsApi` param. e.g. ?ipfsApi=/ip4/127.0.0.1/tcp/5001')
+    console.info('\t2. a `ipfsApi` value in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify({port: \'1337\'}))')
+
+    const ipfs = new IpfsApi(opts)
+    const identity = await ipfs.id()
+
+    console.log('js-ipfs-api ready!')
+    console.timeEnd('IPFS_INIT_API')
+    return { ipfs, identity }
+  } catch (error) {
+    console.log('No ipfs-api found', error)
   }
 }
 
