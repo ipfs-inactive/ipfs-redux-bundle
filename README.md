@@ -82,9 +82,9 @@ Adds the following methods to the redux store.
 
 - Create a new IPFS instance. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
 
-### `store.doUpdateIpfsAPIAddress(address)`
+### `store.doUpdateIpfsApiOpts(opts)`
 
-- Updates the API Address to `address`.
+- Updates the API Options to `opts`.
 
 ## Contribute
 
