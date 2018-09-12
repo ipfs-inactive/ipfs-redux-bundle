@@ -72,22 +72,6 @@ module.exports = (fallbackToJsIpfs = true) => {
         dispatch({type: 'IPFS_INIT_FINISHED', payload})
       }
 
-      // tries to connect to the API address sent through the URL
-      const params = new URLSearchParams(window.location.search)
-      apiOpts = params.get('ipfsApi')
-
-      if (apiOpts) {
-        res = await tryJsIpfsApi(apiOpts)
-
-        if (res) {
-          return leave({
-            ...res,
-            provider: 'js-ipfs-api',
-            apiOpts
-          })
-        }
-      }
-
       // tries window.ipfs
       res = await tryWindow()
       if (res) {
