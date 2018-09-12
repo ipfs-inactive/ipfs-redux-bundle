@@ -6,7 +6,7 @@
 
 See https://reduxbundler.com for more info on the wonders of redux bundles.
 
-Uses [`window.ipfs-fallback`](https://github.com/tableflip/window.ipfs-fallback) to find the best IPFS instance available. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
+This will try to use `window.ipfs` from [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion). If not available, tries to connect to `js-ipfs-api`. The developer can also enable `js-ipfs` as a fallback.
 
 ## Usage
 
@@ -20,7 +20,13 @@ import ipfsBundle from 'ipfs-redux-bundle'
 // ... import other bundles
 
 export default composeBundles(
-  ipfsBundle()
+  ipfsBundle({
+    // These are the defaults:
+    tryWindow: true,      // set false to bypass window.ipfs verification
+    tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
+    tryJsIpfs: false,     // set false to bypass js-ipfs-api verification. Uses data from ipfsOpts variable in localStorage
+    Ipfs: null            // must be set to a js-ipfs instance if tryJsIpfs is true.
+  })
   // ... add bundles here
 )
 ```
@@ -50,23 +56,27 @@ export default connect(
 
 ## API
 
-Adds the following methods to the redux store
+Adds the following methods to the redux store.
 
 #### `store.selectIpfsReady()`
 
-- `boolean` - Is the IPFS instance ready to use yet?
+- `boolean` - Is the IPFS instance ready to use yet?.
 
 #### `store.selectIpfsInitFailed()`
 
-- `boolean` - Did the IPFS instance fail to start?
+- `boolean` - Did the IPFS instance fail to start?.
 
 #### `store.selectIpfsIdentity()`
 
-- `Object` - The last resolved value of `ipfs.id()`
+- `Object` - The last resolved value of `ipfs.id()`.
 
-#### `store.selectIpfsApiAddress()`
+#### `store.selectIpfsProvider()`
 
-- `string` - The API address of the IPFS instance.
+- `string` - Can be `window.ipfs`, `js-ipfs-api` or `js-ipfs`.
+
+#### `store.selectIpfsApiOpts()`
+
+- `string` - The API options of the IPFS instance.
 
 #### `store.doInitIpfs()`
 
