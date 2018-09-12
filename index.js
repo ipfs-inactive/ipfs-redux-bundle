@@ -125,9 +125,9 @@ module.exports = (opts = {}) => {
       await getIpfs(opts, store)
     },
 
-    doUpdateIpfsApiOpts: (opts) => (store) => {
-      store.dispatch({ type: 'IPFS_API_UPDATED', payload: opts })
-      saveUserOpts('ipfsApi', opts)
+    doUpdateIpfsApiOpts: (usrOpts) => (store) => {
+      store.dispatch({ type: 'IPFS_API_UPDATED', payload: usrOpts })
+      saveUserOpts('ipfsApi', usrOpts)
 
       getIpfs(Object.assign({}, opts, {
         tryWindow: false,
