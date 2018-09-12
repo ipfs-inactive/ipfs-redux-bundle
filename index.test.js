@@ -1,17 +1,30 @@
 /* global jest, it, expect */
 const { composeBundlesRaw } = require('redux-bundler')
-const windowIpfsFallback = require('window.ipfs-fallback')
 const ipfsBundle = require('./index')
 
-jest.mock('window.ipfs-fallback')
-
-it('should initialise IPFS API via window.ipfs-fallback', (done) => {
-  const testIdentity = { hello: 'window.ipfs-fallback' }
-  windowIpfsFallback.mockResolvedValue({
-    id: jest.fn().mockResolvedValue(testIdentity)
-  })
+it('Should fail when connecting to window.ipfs', (done) => {
   const store = composeBundlesRaw(
-    ipfsBundle()
+    ipfsBundle({ tryApi: false, tryJsIpfs: false })
+  )()
+
+  expect(store.selectIpfsReady()).toBe(false)
+  store.subscribeToSelectors(['selectIpfsInitFailed'], () => {
+    expect(store.selectIpfsInitFailed()).toBe(true)
+    done()
+  })
+
+  store.doInitIpfs()
+})
+
+it('Should success when connecting to window.ipfs', (done) => {
+  const testIdentity = { hello: 'window.ipfs' }
+
+  global.ipfs = {
+    id: jest.fn().mockResolvedValue(testIdentity)
+  }
+
+  const store = composeBundlesRaw(
+    ipfsBundle({ tryApi: false, tryJsIpfs: false })
   )()
 
   expect(store.selectIpfsReady()).toBe(false)
@@ -23,10 +36,15 @@ it('should initialise IPFS API via window.ipfs-fallback', (done) => {
   store.doInitIpfs()
 })
 
-it('should initialise IPFS API by accessing it directly when running inside of ipfs-companion', (done) => {
-  const testWebExtIdentity = { hello: 'ipfsCompanion.ipfs' }
+it('should connect directly when running inside of ipfs-companion', (done) => {
+  const testIdentity = { hello: 'window.ipfs' }
+  global.ipfs = {
+    id: jest.fn().mockResolvedValue(testIdentity)
+  }
+
   // browser.runtime.getBackgroundPage().ipfsCompanion.ipfs will be present
   // only if page was loaded from a path that belongs to our browser extension
+  const testWebExtIdentity = { hello: 'ipfsCompanion.ipfs' }
   global.browser = {
     get runtime () {
       return {
@@ -50,7 +68,7 @@ it('should initialise IPFS API by accessing it directly when running inside of i
   }
 
   const store = composeBundlesRaw(
-    ipfsBundle()
+    ipfsBundle({ tryApi: false, tryJsIpfs: false })
   )()
 
   expect(store.selectIpfsReady()).toBe(false)

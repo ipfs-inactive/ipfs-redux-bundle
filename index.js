@@ -122,7 +122,7 @@ module.exports = (opts = {}) => {
 
     selectIpfsApiAddress: state => state.ipfs.apiAddress,
 
-    selectIpfsInitFailed: state => !!state.ipfs.error,
+    selectIpfsInitFailed: state => state.ipfs.failed,
 
     selectIpfsIdentity: state => state.ipfs.identity,
 
