@@ -41,6 +41,7 @@ describe('window.ipfs', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
       expect(store.selectIpfsIdentity()).toBe(testIdentity)
+      expect(store.selectIpfsProvider()).toBe('window.ipfs')
       delete global.ipfs
       done()
     })
@@ -86,6 +87,7 @@ describe('window.ipfs', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
       expect(store.selectIpfsIdentity()).toBe(testWebExtIdentity)
+      expect(store.selectIpfsProvider()).toBe('window.ipfs')
       delete global.ipfs
       global.browser = {
         get runtime () {
@@ -137,6 +139,7 @@ describe('js-ipfs-api', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
       expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
 
@@ -158,6 +161,7 @@ describe('js-ipfs-api', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
       expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
 
@@ -179,6 +183,7 @@ describe('js-ipfs-api', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
       expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
 
@@ -204,6 +209,7 @@ describe('js-ipfs', () => {
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       if (first) {
         expect(store.selectIpfsReady()).toBe(true)
+        expect(store.selectIpfsProvider()).toBe('js-ipfs')
         store.doStopIpfs()
         first = false
       } else {
@@ -237,6 +243,7 @@ describe('js-ipfs', () => {
       if (first) {
         expect(store.selectIpfsReady()).toBe(true)
         expect(store.selectIpfsIdentity()).not.toEqual(testIdentity)
+        expect(store.selectIpfsProvider()).toBe('js-ipfs')
         store.doStopIpfs()
         first = false
       } else {
