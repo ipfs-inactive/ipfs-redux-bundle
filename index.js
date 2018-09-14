@@ -152,12 +152,12 @@ module.exports = (opts = {}) => {
       }), store)
     },
 
-    doUpdateIpfsApiAddress: (addr) => (store) => {
+    doUpdateIpfsApiAddress: (addr) => ({ store }) => {
       addr = addr.split('/')
 
       store.doUpdateIpfsApiOpts({
         host: addr[2],
-        port: addr[2],
+        port: addr[4],
         protocol: 'http'
       })
     }
