@@ -78,6 +78,10 @@ Adds the following methods to the redux store.
 
 - `string` - The API options of the IPFS instance.
 
+#### `store.selectIpfsApiAddress()`
+
+- `string` - The API address of the IPFS instance.
+
 #### `store.doInitIpfs()`
 
 - Create a new IPFS instance. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
@@ -89,6 +93,10 @@ Adds the following methods to the redux store.
 ### `store.doUpdateIpfsApiOpts(opts)`
 
 - Updates the API Options to `opts`. This will **overwrite** any configuration you have now and it will only try `js-ipfs-api`.
+
+### `store.doUpdateIpfsApiAddress(address)`
+
+- Updates the API Address to `address`.
 
 ## Contribute
 

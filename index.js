@@ -126,6 +126,8 @@ module.exports = (opts = {}) => {
 
     selectIpfsApiOpts: state => state.ipfs.apiOpts,
 
+    selectIpfsApiAddress: state => `/ip4/${state.ipfs.apiOpts.host}/tcp/${state.ipfs.apiOpts.port}`,
+
     selectIpfsInitFailed: state => state.ipfs.failed,
 
     selectIpfsIdentity: state => state.ipfs.identity,
@@ -148,6 +150,16 @@ module.exports = (opts = {}) => {
         tryWindow: false,
         tryJsIpfs: false
       }), store)
+    },
+
+    doUpdateIpfsApiAddress: (addr) => (store) => {
+      addr = addr.split('/')
+
+      store.doUpdateIpfsApiOpts({
+        host: addr[2],
+        port: addr[2],
+        protocol: 'http'
+      })
     }
   }
 }
