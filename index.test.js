@@ -4,6 +4,7 @@ const ipfsBundle = require('./index')
 const IPFSFactory = require('ipfsd-ctl')
 
 const f = IPFSFactory.create()
+const longTimeout = 50 * 1000
 
 describe('window.ipfs', () => {
   afterEach(() => {
@@ -115,12 +116,12 @@ describe('js-ipfs-api', () => {
       id = await ipfsd.api.id()
       done()
     })
-  }, 50 * 1000)
+  }, longTimeout)
 
   afterAll((done) => {
     if (!ipfsd) return done()
     ipfsd.stop(done)
-  }, 50 * 1000)
+  }, longTimeout)
 
   afterEach(() => {
     global.ipfs = undefined
@@ -212,7 +213,7 @@ describe('js-ipfs', () => {
     })
 
     store.doInitIpfs()
-  })
+  }, longTimeout)
 
   it('Should connect via js-ipfs instead of window.ipfs or js-ipfs-api', (done) => {
     const testIdentity = { hello: 'window.ipfs' }
@@ -245,5 +246,5 @@ describe('js-ipfs', () => {
     })
 
     store.doInitIpfs()
-  })
+  }, longTimeout)
 })
