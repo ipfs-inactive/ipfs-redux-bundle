@@ -24,7 +24,7 @@ export default composeBundles(
     // These are the defaults:
     tryWindow: true,      // set false to bypass window.ipfs verification
     tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
-    tryJsIpfs: false,     // set false to bypass js-ipfs-api verification. Uses data from ipfsOpts variable in localStorage
+    tryJsIpfs: false,     // set true to attempt js-ipfs initialisation.
     Ipfs: null            // must be set to a js-ipfs instance if tryJsIpfs is true.
   })
   // ... add bundles here
@@ -84,7 +84,7 @@ Adds the following methods to the redux store.
 
 ### `store.doUpdateIpfsApiOpts(opts)`
 
-- Updates the API Options to `opts`.
+- Updates the API Options to `opts`. This will **overwrite** any configuration you have now and it will only try `js-ipfs-api`.
 
 ## Contribute
 

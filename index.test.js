@@ -2,7 +2,7 @@
 const { composeBundlesRaw } = require('redux-bundler')
 const ipfsBundle = require('./index')
 
-it('Should fail when connecting via window.ipfs', (done) => {
+it('Should fail to connect via window.ipfs when missing', (done) => {
   const store = composeBundlesRaw(
     ipfsBundle({ tryApi: false, tryJsIpfs: false })
   )()
@@ -16,7 +16,7 @@ it('Should fail when connecting via window.ipfs', (done) => {
   store.doInitIpfs()
 })
 
-it('Should success when connecting via window.ipfs', (done) => {
+it('Should connect via window.ipfs', (done) => {
   const testIdentity = { hello: 'window.ipfs' }
 
   global.ipfs = {

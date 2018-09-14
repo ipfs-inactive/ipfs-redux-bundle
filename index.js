@@ -32,7 +32,7 @@ module.exports = (opts = {}) => {
   async function getIpfs (opts = {}, { getState, dispatch }) {
     dispatch({ type: 'IPFS_INIT_STARTED' })
 
-    const leave = (provider, res, apiOpts) => {
+    const dispatchInitFinished = (provider, res, apiOpts) => {
       ipfs = res.ipfs
 
       const payload = {
@@ -51,7 +51,7 @@ module.exports = (opts = {}) => {
     if (opts.tryWindow) {
       const res = await tryWindow()
       if (res) {
-        return leave('window.ipfs', res)
+        return dispatchInitFinished('window.ipfs', res)
       }
     }
 
@@ -65,7 +65,7 @@ module.exports = (opts = {}) => {
 
       const res = await tryApi(apiOpts)
       if (res) {
-        return leave('js-ipfs-api', res, apiOpts)
+        return dispatchInitFinished('js-ipfs-api', res, apiOpts)
       }
     }
 
@@ -75,7 +75,7 @@ module.exports = (opts = {}) => {
       const res = await tryJsIpfs(opts.Ipfs, ipfsOpts)
 
       if (res) {
-        return leave('js-ipfs', res)
+        return dispatchInitFinished('js-ipfs', res)
       }
     }
 
@@ -100,7 +100,7 @@ module.exports = (opts = {}) => {
         return Object.assign({}, state, { ready: false, failed: true })
       }
 
-      if (type === 'IPFS_API_UPDATED') {
+      if (type === 'IPFS_API_OPTS_UPDATED') {
         return Object.assign({}, state, { ready: false, apiOpts: payload, failed: false })
       }
 
@@ -126,8 +126,8 @@ module.exports = (opts = {}) => {
     },
 
     doUpdateIpfsApiOpts: (usrOpts) => (store) => {
-      store.dispatch({ type: 'IPFS_API_UPDATED', payload: usrOpts })
       saveUserOpts('ipfsApi', usrOpts)
+      store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: usrOpts })
 
       getIpfs(Object.assign({}, opts, {
         tryWindow: false,
@@ -169,18 +169,15 @@ async function tryWindow () {
 
 async function tryApi (opts) {
   try {
-    console.time('IPFS_INIT_API')
+    console.time('js-ipfs-api ready!')
     console.log('Trying ipfs-api', opts)
 
-    console.info('🎛️ Customise your js-ipfs-api options by setting:')
-    console.info('\t1. an address in the URL with `ipfsApi` param. e.g. ?ipfsApi=/ip4/127.0.0.1/tcp/5001')
-    console.info('\t2. a `ipfsApi` value in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify({port: \'1337\'}))')
+    console.info('🎛️ Customise your js-ipfs-api options by storing a `ipfsApi` object in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify({port: \'1337\'}))')
 
     const ipfs = new IpfsApi(opts)
     const identity = await ipfs.id()
 
-    console.log('js-ipfs-api ready!')
-    console.timeEnd('IPFS_INIT_API')
+    console.timeEnd('js-ipfs-api ready!')
     return { ipfs, identity }
   } catch (error) {
     console.log('No ipfs-api found', error)
@@ -189,13 +186,12 @@ async function tryApi (opts) {
 
 async function tryJsIpfs (Ipfs, opts) {
   try {
-    console.time('IPFS_INIT_JS_IPFS')
+    console.time('js-ipfs ready!')
     console.log('Trying js-ipfs', opts)
     console.info('🎛️ Customise your js-ipfs opts by setting an `ipfsOpts` value in localStorage. e.g. localStorage.setItem(\'ipfsOpts\', JSON.stringify({relay: {enabled: true}}))')
     const ipfs = await initJsIpfs(Ipfs, opts)
     const identity = await ipfs.id()
-    console.log('js-ipfs ready!')
-    console.timeEnd('IPFS_INIT_JS_IPFS')
+    console.timeEnd('js-ipfs ready!')
 
     return { ipfs, identity }
   } catch (error) {
