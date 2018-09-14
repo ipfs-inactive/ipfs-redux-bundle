@@ -4,22 +4,27 @@
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-api')
 
-const defaultState = {
-  apiOpts: {
+const defaultOptions = {
+  tryWindow: true,
+  tryApi: true,
+  tryJsIpfs: false,
+  defaultApiOpts: {
     host: '127.0.0.1',
     port: '5001',
     protocol: 'http'
-  },
-  identity: null,
-  provider: null, // 'window.ipfs' | 'js-ipfs-api' | 'js-ipfs'
-  failed: false,
-  ready: false
+  }
 }
 
 module.exports = (opts = {}) => {
-  opts.tryWindow = opts.tryWindow || true
-  opts.tryApi = opts.tryApi || true
-  opts.tryJsIpfs = opts.tryJsIpfs || false
+  opts = Object.assign({}, defaultOptions, opts)
+
+  const defaultState = {
+    apiOpts: opts.defaultApiOpts,
+    identity: null,
+    provider: null, // 'window.ipfs' | 'js-ipfs-api' | 'js-ipfs'
+    failed: false,
+    ready: false
+  }
 
   // Throws a warning if the user wants to use JS-IPFS but didn't pass an instance.
   if (opts.tryJsIpfs && !opts.Ipfs) {
