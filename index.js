@@ -101,6 +101,10 @@ module.exports = (opts = {}) => {
         return Object.assign({}, state, { ready: true }, payload)
       }
 
+      if (type === 'IPFS_STOPPED') {
+        return Object.assign({}, state, { ready: false, failed: false })
+      }
+
       if (type === 'IPFS_INIT_FAILED') {
         return Object.assign({}, state, { ready: false, failed: true })
       }
@@ -128,6 +132,12 @@ module.exports = (opts = {}) => {
 
     doInitIpfs: () => async (store) => {
       await getIpfs(opts, store)
+    },
+
+    doStopIpfs: () => async ({ dispatch }) => {
+      ipfs.stop(() => {
+        dispatch({ type: 'IPFS_STOPPED' })
+      })
     },
 
     doUpdateIpfsApiOpts: (usrOpts) => (store) => {

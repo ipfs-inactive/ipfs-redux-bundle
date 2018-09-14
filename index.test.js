@@ -198,9 +198,17 @@ describe('js-ipfs', () => {
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
+    let first = true
+
     store.subscribeToSelectors(['selectIpfsReady'], () => {
-      expect(store.selectIpfsReady()).toBe(true)
-      done()
+      if (first) {
+        expect(store.selectIpfsReady()).toBe(true)
+        store.doStopIpfs()
+        first = false
+      } else {
+        expect(store.selectIpfsReady()).toBe(false)
+        done()
+      }
     })
 
     store.doInitIpfs()
@@ -222,11 +230,18 @@ describe('js-ipfs', () => {
       })
     )()
 
+    let first = true
     expect(store.selectIpfsReady()).toBe(false)
     store.subscribeToSelectors(['selectIpfsReady'], () => {
-      expect(store.selectIpfsReady()).toBe(true)
-      expect(store.selectIpfsIdentity()).not.toEqual(testIdentity)
-      done()
+      if (first) {
+        expect(store.selectIpfsReady()).toBe(true)
+        expect(store.selectIpfsIdentity()).not.toEqual(testIdentity)
+        store.doStopIpfs()
+        first = false
+      } else {
+        expect(store.selectIpfsReady()).toBe(false)
+        done()
+      }
     })
 
     store.doInitIpfs()
