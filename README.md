@@ -25,7 +25,7 @@ export default composeBundles(
     tryWindow: true,      // set false to bypass window.ipfs verification
     tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
     tryJsIpfs: false,     // set true to attempt js-ipfs initialisation.
-    Ipfs: null            // must be set to a js-ipfs instance if tryJsIpfs is true.
+    getIpfs: null         // must be set to a js-ipfs instance if tryJsIpfs is true.
   })
   // ... add bundles here
 )

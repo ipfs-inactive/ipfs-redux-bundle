@@ -199,7 +199,7 @@ describe('js-ipfs', () => {
     const store = composeBundlesRaw(
       ipfsBundle({
         tryJsIpfs: true,
-        Ipfs: require('ipfs')
+        getIpfs: () => require('ipfs')
       })
     )()
 
@@ -233,7 +233,7 @@ describe('js-ipfs', () => {
         tryWindow: false,
         tryApi: false,
         tryJsIpfs: true,
-        Ipfs: require('ipfs')
+        getIpfs: () => require('ipfs')
       })
     )()
 

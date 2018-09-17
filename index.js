@@ -27,12 +27,13 @@ module.exports = (opts = {}) => {
   }
 
   // Throws a warning if the user wants to use JS-IPFS but didn't pass an instance.
-  if (opts.tryJsIpfs && !opts.Ipfs) {
-    console.warn('When enabling tryJsIpfs, you must provide a js-ipfs instance as opts.Ipfs. It will be disabled for now.')
+  if (opts.tryJsIpfs && !opts.getIpfs) {
+    console.warn('When enabling tryJsIpfs, you must provide a js-ipfs instance as opts.getIpfs. It will be disabled for now.')
     opts.tryJsIpfs = false
   }
 
   let ipfs = null
+  let Ipfs = null
 
   async function getIpfs (opts = {}, { getState, dispatch }) {
     dispatch({ type: 'IPFS_INIT_STARTED' })
@@ -77,7 +78,12 @@ module.exports = (opts = {}) => {
     // tries js-ipfs if enabled
     if (opts.tryJsIpfs) {
       const ipfsOpts = getUserOpts('ipfsOpts')
-      const res = await tryJsIpfs(opts.Ipfs, ipfsOpts)
+
+      if (!Ipfs) {
+        Ipfs = await opts.getIpfs()
+      }
+
+      const res = await tryJsIpfs(Ipfs, ipfsOpts)
 
       if (res) {
         return dispatchInitFinished('js-ipfs', res)
