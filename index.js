@@ -132,7 +132,11 @@ module.exports = (opts = {}) => {
 
     selectIpfsApiOpts: state => state.ipfs.apiOpts,
 
-    selectIpfsApiAddress: state => `/ip4/${state.ipfs.apiOpts.host}/tcp/${state.ipfs.apiOpts.port}`,
+    selectIpfsApiAddress: state => {
+      const ipv = state.ipfs.apiOpts.host.split('.').length === 4 ? 'ip4' : 'ip6'
+
+      return `/${ipv}/${state.ipfs.apiOpts.host}/tcp/${state.ipfs.apiOpts.port}`
+    },
 
     selectIpfsInitFailed: state => state.ipfs.failed,
 
