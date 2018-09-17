@@ -1,57 +1,122 @@
 'use strict'
 /* eslint-env browser, webextensions */
 
-const windowIpfsFallback = require('window.ipfs-fallback')
 const root = require('window-or-global')
+const IpfsApi = require('ipfs-api')
 
-const localStorage = root.localStorage
-const getAddress = () => localStorage ? localStorage.getItem('ipfs-api-address') : null
-const persistAddress = (val) => localStorage ? localStorage.setItem('ipfs-api-address', val) : null
-
-const defaultState = {
-  apiAddress: getAddress() || '/ip4/127.0.0.1/tcp/5001',
-  identity: null,
-  error: null,
-  ready: false
+const defaultOptions = {
+  tryWindow: true,
+  tryApi: true,
+  tryJsIpfs: false,
+  defaultApiOpts: {
+    host: '127.0.0.1',
+    port: '5001',
+    protocol: 'http'
+  }
 }
 
-module.exports = () => {
-  let ipfs = null
+module.exports = (opts = {}) => {
+  opts = Object.assign({}, defaultOptions, opts)
 
-  async function getIpfs (args) {
-    // Opportunistic optimizations when running from ipfs-companion (+ ipfs-desktop in future)
-    if (typeof browser === 'object') {
-      // Note: under some vendors getBackgroundPage() will return null if window is in incognito mode
-      const webExt = await browser.runtime.getBackgroundPage()
-      // If extension is ipfs-companion exposing IPFS API, use it directly for best performance
-      if (webExt && webExt.ipfsCompanion && webExt.ipfsCompanion.ipfs) {
-        return webExt.ipfsCompanion.ipfs
+  const defaultState = {
+    apiOpts: opts.defaultApiOpts,
+    identity: null,
+    provider: null, // 'window.ipfs' | 'js-ipfs-api' | 'js-ipfs'
+    failed: false,
+    ready: false
+  }
+
+  // Throws a warning if the user wants to use JS-IPFS but didn't pass an instance.
+  if (opts.tryJsIpfs && !opts.getIpfs) {
+    console.warn('When enabling tryJsIpfs, you must provide a js-ipfs instance as opts.getIpfs. It will be disabled for now.')
+    opts.tryJsIpfs = false
+  }
+
+  let ipfs = null
+  let Ipfs = null
+
+  async function getIpfs (opts = {}, { getState, dispatch }) {
+    dispatch({ type: 'IPFS_INIT_STARTED' })
+
+    const dispatchInitFinished = (provider, res, apiOpts) => {
+      ipfs = res.ipfs
+
+      const payload = {
+        provider,
+        identity: res.identity
+      }
+
+      if (apiOpts) {
+        payload.apiOpts = apiOpts
+      }
+
+      dispatch({ type: 'IPFS_INIT_FINISHED', payload })
+    }
+
+    // tries window.ipfs
+    if (opts.tryWindow) {
+      const res = await tryWindow()
+      if (res) {
+        return dispatchInitFinished('window.ipfs', res)
       }
     }
-    // Usual route: window.ipfs-fallback
-    return windowIpfsFallback(args)
+
+    // tries js-ipfs-api
+    if (opts.tryApi) {
+      let apiOpts = getState().ipfs.apiOpts
+
+      if (typeof apiOpts === 'object') {
+        apiOpts = Object.assign({}, apiOpts, getUserOpts('ipfsApi'))
+      }
+
+      const res = await tryApi(apiOpts)
+      if (res) {
+        return dispatchInitFinished('js-ipfs-api', res, apiOpts)
+      }
+    }
+
+    // tries js-ipfs if enabled
+    if (opts.tryJsIpfs) {
+      const ipfsOpts = getUserOpts('ipfsOpts')
+
+      if (!Ipfs) {
+        Ipfs = await opts.getIpfs()
+      }
+
+      const res = await tryJsIpfs(Ipfs, ipfsOpts)
+
+      if (res) {
+        return dispatchInitFinished('js-ipfs', res)
+      }
+    }
+
+    dispatch({ type: 'IPFS_INIT_FAILED' })
   }
 
   return {
     name: 'ipfs',
 
-    reducer (state, {type, payload, error}) {
+    reducer (state, { type, payload }) {
       state = state || defaultState
 
       if (type === 'IPFS_INIT_STARTED') {
-        return Object.assign({}, state, { error: null })
+        return Object.assign({}, state, { failed: false })
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        return Object.assign({}, state, { ready: true, identity: payload })
+        return Object.assign({}, state, { ready: true }, payload)
+      }
+
+      if (type === 'IPFS_STOPPED') {
+        return Object.assign({}, state, { ready: false, failed: false })
       }
 
       if (type === 'IPFS_INIT_FAILED') {
-        return Object.assign({}, state, { ready: false, error: error })
+        return Object.assign({}, state, { ready: false, failed: true })
       }
 
-      if (type === 'IPFS_API_UPDATED') {
-        return Object.assign({}, state, { ready: false, apiAddress: payload, error: null })
+      if (type === 'IPFS_API_OPTS_UPDATED') {
+        return Object.assign({}, state, { ready: false, apiOpts: payload, failed: false })
       }
 
       return state
@@ -63,34 +128,137 @@ module.exports = () => {
 
     selectIpfsReady: state => state.ipfs.ready,
 
-    selectIpfsApiAddress: state => state.ipfs.apiAddress,
+    selectIpfsProvider: state => state.ipfs.provider,
 
-    selectIpfsInitFailed: state => !!state.ipfs.error,
+    selectIpfsApiOpts: state => state.ipfs.apiOpts,
+
+    selectIpfsApiAddress: state => `/ip4/${state.ipfs.apiOpts.host}/tcp/${state.ipfs.apiOpts.port}`,
+
+    selectIpfsInitFailed: state => state.ipfs.failed,
 
     selectIpfsIdentity: state => state.ipfs.identity,
 
-    doInitIpfs: () => async ({ dispatch, getState }) => {
-      dispatch({ type: 'IPFS_INIT_STARTED' })
-
-      const { apiAddress } = getState().ipfs
-      let identity = null
-
-      try {
-        ipfs = await getIpfs({ api: true, ipfs: apiAddress })
-        // will fail if remote api is not available on default port
-        identity = await ipfs.id()
-        // if it works, save the address for the next time
-        persistAddress(apiAddress)
-      } catch (error) {
-        return dispatch({ type: 'IPFS_INIT_FAILED', error })
-      }
-
-      dispatch({ type: 'IPFS_INIT_FINISHED', payload: identity })
+    doInitIpfs: () => async (store) => {
+      await getIpfs(opts, store)
     },
 
-    doUpdateIpfsAPIAddress: (apiAddress) => ({dispatch, store}) => {
-      dispatch({type: 'IPFS_API_UPDATED', payload: apiAddress})
-      store.doInitIpfs()
+    doStopIpfs: () => async ({ dispatch }) => {
+      ipfs.stop(() => {
+        dispatch({ type: 'IPFS_STOPPED' })
+      })
+    },
+
+    doUpdateIpfsApiOpts: (usrOpts) => (store) => {
+      saveUserOpts('ipfsApi', usrOpts)
+      store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: usrOpts })
+
+      getIpfs(Object.assign({}, opts, {
+        tryWindow: false,
+        tryJsIpfs: false
+      }), store)
+    },
+
+    doUpdateIpfsApiAddress: (addr) => ({ store }) => {
+      addr = addr.split('/')
+
+      store.doUpdateIpfsApiOpts({
+        host: addr[2],
+        port: addr[4],
+        protocol: 'http'
+      })
     }
   }
+}
+
+async function tryWindow () {
+  console.log('Trying window.ipfs')
+
+  // Opportunistic optimizations when running from ipfs-companion (+ ipfs-desktop in future)
+  if (typeof browser === 'object') {
+    // Note: under some vendors getBackgroundPage() will return null if window is in incognito mode
+    const webExt = await browser.runtime.getBackgroundPage()
+    // If extension is ipfs-companion exposing IPFS API, use it directly for best performance
+    if (webExt && webExt.ipfsCompanion && webExt.ipfsCompanion.ipfs) {
+      const ipfs = webExt.ipfsCompanion.ipfs
+      const identity = await ipfs.id()
+
+      return { identity, ipfs }
+    }
+  }
+
+  if (root.ipfs) {
+    try {
+      let identity = await root.ipfs.id()
+      console.log('Found `window.ipfs`. Nice!')
+
+      return { ipfs: root.ipfs, identity }
+    } catch (error) {
+      console.log('Failed to get id from window.ipfs', error)
+    }
+  } else {
+    console.log('No window.ipfs found. Consider Installing the IPFS Companion web extension - https://github.com/ipfs-shipyard/ipfs-companion')
+  }
+}
+
+async function tryApi (opts) {
+  try {
+    console.time('js-ipfs-api ready!')
+    console.log('Trying ipfs-api', opts)
+
+    console.info('🎛️ Customise your js-ipfs-api options by storing a `ipfsApi` object in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify({port: \'1337\'}))')
+
+    const ipfs = new IpfsApi(opts)
+    const identity = await ipfs.id()
+
+    console.timeEnd('js-ipfs-api ready!')
+    return { ipfs, identity }
+  } catch (error) {
+    console.log('No ipfs-api found', error)
+  }
+}
+
+async function tryJsIpfs (Ipfs, opts) {
+  try {
+    console.time('js-ipfs ready!')
+    console.log('Trying js-ipfs', opts)
+    console.info('🎛️ Customise your js-ipfs opts by setting an `ipfsOpts` value in localStorage. e.g. localStorage.setItem(\'ipfsOpts\', JSON.stringify({relay: {enabled: true}}))')
+    const ipfs = await initJsIpfs(Ipfs, opts)
+    const identity = await ipfs.id()
+    console.timeEnd('js-ipfs ready!')
+
+    return { ipfs, identity }
+  } catch (error) {
+    console.log('Failed to initialise js-ipfs', error)
+  }
+}
+
+function getUserOpts (key) {
+  let userOpts = null
+  if (root.localStorage) {
+    try {
+      const optsStr = root.localStorage.getItem(key) || '{}'
+      userOpts = JSON.parse(optsStr)
+    } catch (error) {
+      console.log(`Error reading '${key}' value from localStorage`, error)
+    }
+  }
+  return userOpts
+}
+
+function saveUserOpts (key, val) {
+  if (root.localStorage) {
+    try {
+      root.localStorage.setItem(key, JSON.stringify(val))
+    } catch (error) {
+      console.log(`Error writing '${key}' value to localStorage`, error)
+    }
+  }
+}
+
+function initJsIpfs (Ipfs, opts) {
+  return new Promise((resolve, reject) => {
+    const ipfs = new Ipfs(opts)
+    ipfs.once('ready', () => resolve(ipfs))
+    ipfs.once('error', err => reject(err))
+  })
 }
