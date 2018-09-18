@@ -24,6 +24,7 @@
   "homepage": "https://github.com/ipfs-shipyard/ipfs-redux-bundle#readme",
   "dependencies": {
     "ipfs-api": "^24.0.1",
+    "multiaddr": "^5.0.0",
     "window-or-global": "^1.0.1"
   },
   "devDependencies": {

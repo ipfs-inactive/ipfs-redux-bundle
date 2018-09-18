@@ -3,6 +3,7 @@
 
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-api')
+const multiaddr = require('multiaddr')
 
 const defaultOptions = {
   tryWindow: true,
@@ -163,14 +164,18 @@ module.exports = (opts = {}) => {
     },
 
     doUpdateIpfsApiAddress: (addr) => ({ store }) => {
-      const https = addr.includes('https')
-      addr = addr.split('/')
+      try {
+        const maddr = multiaddr(addr).nodeAddress()
+        const https = addr.includes('https')
 
-      store.doUpdateIpfsApiOpts({
-        host: addr[2],
-        port: addr[4],
-        protocol: https ? 'https' : 'http'
-      })
+        store.doUpdateIpfsApiOpts({
+          host: maddr.address,
+          port: maddr.port,
+          protocol: https ? 'https' : 'http'
+        })
+      } catch (e) {
+        console.log('Invalid multiaddress provided', e)
+      }
     }
   }
 }
