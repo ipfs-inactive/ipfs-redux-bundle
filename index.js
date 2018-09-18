@@ -163,12 +163,13 @@ module.exports = (opts = {}) => {
     },
 
     doUpdateIpfsApiAddress: (addr) => ({ store }) => {
+      const https = addr.includes('https')
       addr = addr.split('/')
 
       store.doUpdateIpfsApiOpts({
         host: addr[2],
         port: addr[4],
-        protocol: 'http'
+        protocol: https ? 'https' : 'http'
       })
     }
   }
