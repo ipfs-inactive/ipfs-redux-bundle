@@ -65,9 +65,8 @@ module.exports = (opts = {}) => {
     // tries js-ipfs-api
     if (opts.tryApi) {
       let apiOpts = getState().ipfs.apiOpts
-      let usrOpts = getUserOpts('ipfsApi')
 
-      if (typeof apiOpts === 'object' && usrOpts) {
+      if (typeof apiOpts === 'object' && !(apiOpts instanceof multiaddr)) {
         apiOpts = Object.assign({}, apiOpts, getUserOpts('ipfsApi'))
       }
 
@@ -168,8 +167,9 @@ module.exports = (opts = {}) => {
       } else {
         // discard user options since we're now using a multiaddress
         // this avoids overwriting the options in getIpfs
-        saveUserOpts('ipfsApi', null)
-        store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: multiaddr(usrOpts) })
+        const addr = multiaddr(usrOpts)
+        saveUserOpts('ipfsApi', addr.toString())
+        store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: addr })
       }
 
       getIpfs(Object.assign({}, opts, {
