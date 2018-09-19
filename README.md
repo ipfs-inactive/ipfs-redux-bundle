@@ -76,7 +76,7 @@ Adds the following methods to the redux store.
 
 #### `store.selectIpfsApiOpts()`
 
-- `string` - The API options of the IPFS instance.
+- `string` - The API options of the IPFS instance. It can be a `multiaddress`, a `string` or an `object`.
 
 #### `store.selectIpfsApiAddress()`
 

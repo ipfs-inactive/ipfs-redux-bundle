@@ -65,8 +65,9 @@ module.exports = (opts = {}) => {
     // tries js-ipfs-api
     if (opts.tryApi) {
       let apiOpts = getState().ipfs.apiOpts
+      let usrOpts = getUserOpts('ipfsApi')
 
-      if (typeof apiOpts === 'object') {
+      if (typeof apiOpts === 'object' && usrOpts) {
         apiOpts = Object.assign({}, apiOpts, getUserOpts('ipfsApi'))
       }
 
@@ -134,9 +135,16 @@ module.exports = (opts = {}) => {
     selectIpfsApiOpts: state => state.ipfs.apiOpts,
 
     selectIpfsApiAddress: state => {
-      const ipv = state.ipfs.apiOpts.host.split('.').length === 4 ? 'ip4' : 'ip6'
+      const opts = state.ipfs.apiOpts
 
-      return `/${ipv}/${state.ipfs.apiOpts.host}/tcp/${state.ipfs.apiOpts.port}`
+      if (typeof opts === 'string') {
+        return opts
+      } else if (opts instanceof multiaddr) {
+        return opts.toString()
+      } else {
+        const ipv = opts.host.split('.').length === 4 ? 'ip4' : 'ip6'
+        return `/${ipv}/${opts.host}/tcp/${opts.port}`
+      }
     },
 
     selectIpfsInitFailed: state => state.ipfs.failed,
@@ -153,9 +161,16 @@ module.exports = (opts = {}) => {
       })
     },
 
-    doUpdateIpfsApiOpts: (usrOpts) => (store) => {
-      saveUserOpts('ipfsApi', usrOpts)
-      store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: usrOpts })
+    doUpdateIpfsApiOpts: (usrOpts, isMultiaddress) => (store) => {
+      if (!isMultiaddress) {
+        saveUserOpts('ipfsApi', usrOpts)
+        store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: usrOpts })
+      } else {
+        // discard user options since we're now using a multiaddress
+        // this avoids overwriting the options in getIpfs
+        saveUserOpts('ipfsApi', null)
+        store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: multiaddr(usrOpts) })
+      }
 
       getIpfs(Object.assign({}, opts, {
         tryWindow: false,
@@ -164,18 +179,7 @@ module.exports = (opts = {}) => {
     },
 
     doUpdateIpfsApiAddress: (addr) => ({ store }) => {
-      try {
-        const maddr = multiaddr(addr).nodeAddress()
-        const https = addr.includes('https')
-
-        store.doUpdateIpfsApiOpts({
-          host: maddr.address,
-          port: maddr.port,
-          protocol: https ? 'https' : 'http'
-        })
-      } catch (e) {
-        console.log('Invalid multiaddress provided', e)
-      }
+      store.doUpdateIpfsApiOpts(addr, true)
     }
   }
 }
