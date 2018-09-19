@@ -1,6 +1,6 @@
 {
   "name": "ipfs-redux-bundle",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A redux bundle to create an IPFS instance",
   "main": "index.js",
   "scripts": {
