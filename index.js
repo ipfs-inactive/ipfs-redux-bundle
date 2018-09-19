@@ -197,7 +197,7 @@ async function tryApi (opts) {
     console.time('js-ipfs-api ready!')
     console.log('Trying ipfs-api', opts)
 
-    console.info('🎛️ Customise your js-ipfs-api options by storing a `ipfsApi` object in localStorage. e.g. localStorage.setItem(\'ipfsApi\', JSON.stringify(\'/ip4/127.0.0.1/tcp/5001\'))')
+    console.info('🎛️ Customise your js-ipfs-api options by storing a `ipfsApi` object in localStorage. e.g. localStorage.setItem(\'ipfsApi\', \'/ip4/127.0.0.1/tcp/5001\')')
 
     const ipfs = new IpfsApi(opts)
     const identity = await ipfs.id()
