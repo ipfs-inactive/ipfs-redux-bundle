@@ -15,9 +15,9 @@ const defaultOptions = {
 module.exports = (opts = {}) => {
   opts = Object.assign({}, defaultOptions, opts)
 
-  let initialAddress = getUserOpts('ipfsApi')
-  if (isMultiaddress(initialAddress)) {
-    opts.defaultApiAddress = initialAddress
+  let userProvidedIpfsApi = getUserProvidedIpfsApi()
+  if (userProvidedIpfsApi) {
+    opts.defaultApiAddress = userProvidedIpfsApi
   }
 
   const defaultState = {
@@ -66,9 +66,9 @@ module.exports = (opts = {}) => {
     // tries js-ipfs-api
     if (opts.tryApi) {
       let apiAddress = getState().ipfs.apiAddress
-      let userOpts = getUserOpts('ipfsApi')
+      let userOpts = getUserProvidedIpfsApi()
 
-      if (userOpts !== apiAddress && isMultiaddress(userOpts)) {
+      if (userOpts !== apiAddress) {
         apiAddress = userOpts
         dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: userOpts })
       }
@@ -245,14 +245,22 @@ function getUserOpts (key) {
     } catch (error) {
       console.log(`Error reading '${key}' value from localStorage`, error)
     }
+    try {
+      return JSON.parse(userOpts)
+    } catch (_) {
+      // res was probably a string, so pass it on.
+      return userOpts
+    }
   }
-  return userOpts
 }
 
 function saveUserOpts (key, val) {
   if (root.localStorage) {
     try {
-      root.localStorage.setItem(key, JSON.stringify(val))
+      if (typeof val !== 'string') {
+        val = JSON.stringify(val)
+      }
+      root.localStorage.setItem(key, val)
     } catch (error) {
       console.log(`Error writing '${key}' value to localStorage`, error)
     }
@@ -265,4 +273,13 @@ function initJsIpfs (Ipfs, opts) {
     ipfs.once('ready', () => resolve(ipfs))
     ipfs.once('error', err => reject(err))
   })
+}
+
+function getUserProvidedIpfsApi () {
+  const ipfsApi = getUserOpts('ipfsApi')
+  if (ipfsApi && !isMultiaddress(ipfsApi)) {
+    console.warn(`The ipfsApi address ${ipfsApi} is invalid.`)
+    return null
+  }
+  return ipfsApi
 }
