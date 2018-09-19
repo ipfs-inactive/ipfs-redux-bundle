@@ -3,6 +3,7 @@
 
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-api')
+const multiaddr = require('multiaddr')
 
 const defaultOptions = {
   tryWindow: true,
@@ -13,6 +14,11 @@ const defaultOptions = {
 
 module.exports = (opts = {}) => {
   opts = Object.assign({}, defaultOptions, opts)
+
+  let initialAddress = getUserOpts('ipfsApi')
+  if (isMultiaddress(initialAddress)) {
+    opts.defaultApiAddress = initialAddress
+  }
 
   const defaultState = {
     apiAddress: opts.defaultApiAddress,
@@ -62,7 +68,7 @@ module.exports = (opts = {}) => {
       let apiAddress = getState().ipfs.apiAddress
       let userOpts = getUserOpts('ipfsApi')
 
-      if (userOpts !== apiAddress && typeof userOpts === 'string') {
+      if (userOpts !== apiAddress && isMultiaddress(userOpts)) {
         apiAddress = userOpts
         dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: userOpts })
       }
@@ -75,7 +81,7 @@ module.exports = (opts = {}) => {
 
     // tries js-ipfs if enabled
     if (opts.tryJsIpfs) {
-      const ipfsOpts = getUserOpts('ipfsOpts')
+      const ipfsOpts = getUserOpts('ipfsOpts') || {}
 
       if (!Ipfs) {
         Ipfs = await opts.getIpfs()
@@ -218,12 +224,24 @@ async function tryJsIpfs (Ipfs, opts) {
   }
 }
 
+function isMultiaddress (addr) {
+  if (addr === null || addr === undefined || typeof addr === 'undefined') {
+    return false
+  }
+
+  try {
+    multiaddr(addr)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 function getUserOpts (key) {
   let userOpts = null
   if (root.localStorage) {
     try {
-      const optsStr = root.localStorage.getItem(key) || '{}'
-      userOpts = JSON.parse(optsStr)
+      userOpts = root.localStorage.getItem(key)
     } catch (error) {
       console.log(`Error reading '${key}' value from localStorage`, error)
     }
