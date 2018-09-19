@@ -132,7 +132,7 @@ describe('js-ipfs-api', () => {
 
   it('Should connect via js-ipfs-api when window.ipfs is not present', (done) => {
     const store = composeBundlesRaw(
-      ipfsBundle({ defaultApiOpts: apiAddr })
+      ipfsBundle({ defaultApiAddress: apiAddr })
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
@@ -154,7 +154,7 @@ describe('js-ipfs-api', () => {
     }
 
     const store = composeBundlesRaw(
-      ipfsBundle({ tryWindow: false, defaultApiOpts: apiAddr })
+      ipfsBundle({ tryWindow: false, defaultApiAddress: apiAddr })
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
@@ -176,7 +176,7 @@ describe('js-ipfs-api', () => {
     }
 
     const store = composeBundlesRaw(
-      ipfsBundle({ defaultApiOpts: apiAddr })
+      ipfsBundle({ defaultApiAddress: apiAddr })
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
