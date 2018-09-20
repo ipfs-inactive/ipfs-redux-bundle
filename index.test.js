@@ -108,7 +108,7 @@ describe('js-ipfs-api', () => {
   const idResponse = { 'ID': 'QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', 'PublicKey': 'CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq2cwYuiR/ZfSWaIXdFhrXz5c+c7W3SmQ5N2wWl4du05YUV63qYlGLNqVP0vyM6IJYPHAqsNT3yT8h9kMr/aSExLctRoYk9K6wf6xpNTltJdNdFunOWjba44s2du/jeYClJsNV3egnUddJV/jpjLPRYbELdbA40rucQ7jYu9QwNKlJ5EHE6m4nLPYLyq0mCPSpm9XOKhuKio3gRQfyo4r9nobZ3gSy/t9/n4tQmNh6GNlgi6O1pKvN1jZ6Pf0dLUlwhHjblftzyYbzyIfHlzt7OU7O8P7BHhNavUn1HOhP3l6OIN5eEtlb30wT6ZT6PsWKqrwMotLD7gBhmiLfny9rAgMBAAE=', 'Addresses': ['/ip4/127.0.0.1/tcp/4002/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', '/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', '/ip4/192.168.1.106/tcp/4002/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8'], 'AgentVersion': 'js-ipfs/0.32.0', 'ProtocolVersion': '9000' }
 
   beforeEach(() => {
-    nock('http://localhost:5001')
+    nock('http://127.0.0.1:5001')
       .post('/api/v0/id?stream-channels=true')
       .reply(200, idResponse, {
         'Content-Type': 'application/json'
@@ -245,4 +245,119 @@ describe('js-ipfs', () => {
 
     store.doInitIpfs()
   }, longTimeout)
+})
+
+describe('miscellaneous', () => {
+  const idPort5001 = { 'ID': 'Port5001', 'PublicKey': 'CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq2cwYuiR/ZfSWaIXdFhrXz5c+c7W3SmQ5N2wWl4du05YUV63qYlGLNqVP0vyM6IJYPHAqsNT3yT8h9kMr/aSExLctRoYk9K6wf6xpNTltJdNdFunOWjba44s2du/jeYClJsNV3egnUddJV/jpjLPRYbELdbA40rucQ7jYu9QwNKlJ5EHE6m4nLPYLyq0mCPSpm9XOKhuKio3gRQfyo4r9nobZ3gSy/t9/n4tQmNh6GNlgi6O1pKvN1jZ6Pf0dLUlwhHjblftzyYbzyIfHlzt7OU7O8P7BHhNavUn1HOhP3l6OIN5eEtlb30wT6ZT6PsWKqrwMotLD7gBhmiLfny9rAgMBAAE=', 'Addresses': ['/ip4/127.0.0.1/tcp/4002/ipfs/Port5001', '/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', '/ip4/192.168.1.106/tcp/4002/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8'], 'AgentVersion': 'js-ipfs/0.32.0', 'ProtocolVersion': '9000' }
+  const idPort5002 = { 'ID': 'Port5002' }
+
+  beforeEach(() => {
+    global.ipfs = undefined
+    global.browser = undefined
+
+    nock('http://127.0.0.1:5001')
+      .post('/api/v0/id?stream-channels=true')
+      .reply(200, idPort5001, {
+        'Content-Type': 'application/json'
+      })
+
+    nock('http://127.0.0.1:5002')
+      .post('/api/v0/id?stream-channels=true')
+      .reply(200, idPort5002, {
+        'Content-Type': 'application/json'
+      })
+  })
+
+  afterEach(nock.cleanAll)
+
+  it('Should connect to port 5001 and then update to 5002', (done) => {
+    const store = composeBundlesRaw(
+      ipfsBundle()
+    )()
+
+    expect(store.selectIpfsInvalidAddress()).toBe(false)
+    expect(store.selectIpfsReady()).toBe(false)
+    let it = 0
+
+    store.subscribeToSelectors(['selectIpfsReady'], () => {
+      if (it === 0) {
+        it++
+        expect(store.selectIpfsReady()).toBe(true)
+        expect(store.selectIpfsInvalidAddress()).toBe(false)
+        expect(store.selectIpfsIdentity().id).toEqual(idPort5001.ID)
+        expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
+        store.doUpdateIpfsApiAddress('/ip4/127.0.0.1/tcp/5002')
+      } else if (it === 1) {
+        it++
+        expect(store.selectIpfsReady()).toBe(false)
+        expect(store.selectIpfsInvalidAddress()).toBe(false)
+      } else {
+        expect(store.selectIpfsReady()).toBe(true)
+        expect(store.selectIpfsInvalidAddress()).toBe(false)
+        expect(store.selectIpfsIdentity().id).toEqual(idPort5002.ID)
+        expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
+        done()
+      }
+    })
+
+    store.doInitIpfs()
+  })
+
+  it('Should connect to port 5001 via doUpdateIpfsApiAddress', (done) => {
+    const store = composeBundlesRaw(
+      ipfsBundle()
+    )()
+
+    expect(store.selectIpfsInvalidAddress()).toBe(false)
+    expect(store.selectIpfsReady()).toBe(false)
+    store.subscribeToSelectors(['selectIpfsReady'], () => {
+      expect(store.selectIpfsReady()).toBe(true)
+      expect(store.selectIpfsInvalidAddress()).toBe(false)
+      expect(store.selectIpfsIdentity().id).toEqual(idPort5001.ID)
+      expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
+      done()
+    })
+
+    store.doUpdateIpfsApiAddress('/ip4/127.0.0.1/tcp/5001')
+  })
+
+  it('Should get invalid address via doUpdateIpfsApiAddress', (done) => {
+    const store = composeBundlesRaw(
+      ipfsBundle()
+    )()
+
+    expect(store.selectIpfsReady()).toBe(false)
+    expect(store.selectIpfsInvalidAddress()).toBe(false)
+    store.subscribeToSelectors(['selectIpfsInvalidAddress'], () => {
+      expect(store.selectIpfsReady()).toBe(false)
+      expect(store.selectIpfsInvalidAddress()).toBe(true)
+      done()
+    })
+
+    store.doUpdateIpfsApiAddress('OBVIOUSLY INVALID ADDRESS')
+  })
+
+  it('Should get invalid address via doUpdateIpfsApiAddress and then dismiss it', (done) => {
+    const store = composeBundlesRaw(
+      ipfsBundle()
+    )()
+
+    expect(store.selectIpfsReady()).toBe(false)
+    expect(store.selectIpfsInvalidAddress()).toBe(false)
+    let first = true
+    store.subscribeToSelectors(['selectIpfsInvalidAddress'], () => {
+      if (first) {
+        expect(store.selectIpfsReady()).toBe(false)
+        expect(store.selectIpfsInvalidAddress()).toBe(true)
+        first = false
+        store.doDismissIpfsInvalidAddress()
+      } else {
+        expect(store.selectIpfsReady()).toBe(false)
+        expect(store.selectIpfsInvalidAddress()).toBe(false)
+        done()
+      }
+    })
+
+    store.doUpdateIpfsApiAddress('OBVIOUSLY INVALID ADDRESS')
+  })
 })

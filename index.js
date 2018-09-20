@@ -25,7 +25,8 @@ module.exports = (opts = {}) => {
     identity: null,
     provider: null, // 'window.ipfs' | 'js-ipfs-api' | 'js-ipfs'
     failed: false,
-    ready: false
+    ready: false,
+    invalidAddress: false
   }
 
   // Throws a warning if the user wants to use JS-IPFS but didn't pass an instance.
@@ -37,7 +38,7 @@ module.exports = (opts = {}) => {
   let ipfs = null
   let Ipfs = null
 
-  async function getIpfs (opts = {}, { getState, dispatch }) {
+  async function getIpfs (opts = {}, { store, getState, dispatch }) {
     dispatch({ type: 'IPFS_INIT_STARTED' })
 
     const dispatchInitFinished = (provider, res, apiAddress) => {
@@ -58,6 +59,7 @@ module.exports = (opts = {}) => {
     // tries window.ipfs
     if (opts.tryWindow) {
       const res = await tryWindow()
+
       if (res) {
         return dispatchInitFinished('window.ipfs', res)
       }
@@ -65,15 +67,9 @@ module.exports = (opts = {}) => {
 
     // tries js-ipfs-api
     if (opts.tryApi) {
-      let apiAddress = getState().ipfs.apiAddress
-      let userOpts = getUserProvidedIpfsApi()
-
-      if (userOpts !== apiAddress) {
-        apiAddress = userOpts
-        dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: userOpts })
-      }
-
+      const apiAddress = getState().ipfs.apiAddress
       const res = await tryApi(apiAddress)
+
       if (res) {
         return dispatchInitFinished('js-ipfs-api', res, apiAddress)
       }
@@ -104,23 +100,31 @@ module.exports = (opts = {}) => {
       state = state || defaultState
 
       if (type === 'IPFS_INIT_STARTED') {
-        return Object.assign({}, state, { failed: false })
+        return Object.assign({}, state, { failed: false, invalidAddress: false })
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        return Object.assign({}, state, { ready: true }, payload)
+        return Object.assign({}, state, { ready: true, invalidAddress: false }, payload)
       }
 
       if (type === 'IPFS_STOPPED') {
-        return Object.assign({}, state, { ready: false, failed: false })
+        return Object.assign({}, state, { ready: false, failed: false, invalidAddress: false })
       }
 
       if (type === 'IPFS_INIT_FAILED') {
-        return Object.assign({}, state, { ready: false, failed: true })
+        return Object.assign({}, state, { ready: false, failed: true, invalidAddress: false })
       }
 
-      if (type === 'IPFS_API_OPTS_UPDATED') {
-        return Object.assign({}, state, { ready: false, apiAddress: payload, failed: false })
+      if (type === 'IPFS_API_ADDRESS_UPDATED') {
+        return Object.assign({}, state, { ready: false, apiAddress: payload, failed: false, invalidAddress: false })
+      }
+
+      if (type === 'IPFS_API_ADDRESS_INVALID') {
+        return Object.assign({}, state, { invalidAddress: true })
+      }
+
+      if (type === 'IPFS_API_ADDRESS_INVALID_DISMISS') {
+        return Object.assign({}, state, { invalidAddress: false })
       }
 
       return state
@@ -135,6 +139,8 @@ module.exports = (opts = {}) => {
     selectIpfsProvider: state => state.ipfs.provider,
 
     selectIpfsApiAddress: state => state.ipfs.apiAddress,
+
+    selectIpfsInvalidAddress: state => state.ipfs.invalidAddress,
 
     selectIpfsInitFailed: state => state.ipfs.failed,
 
@@ -151,13 +157,22 @@ module.exports = (opts = {}) => {
     },
 
     doUpdateIpfsApiAddress: (addr) => (store) => {
+      if (!isMultiaddress(addr)) {
+        store.dispatch({ type: 'IPFS_API_ADDRESS_INVALID' })
+        return
+      }
+
       saveUserOpts('ipfsApi', addr)
-      store.dispatch({ type: 'IPFS_API_OPTS_UPDATED', payload: addr })
+      store.dispatch({ type: 'IPFS_API_ADDRESS_UPDATED', payload: addr })
 
       getIpfs(Object.assign({}, opts, {
         tryWindow: false,
         tryJsIpfs: false
       }), store)
+    },
+
+    doDismissIpfsInvalidAddress: () => ({ dispatch }) => {
+      dispatch({ type: 'IPFS_API_ADDRESS_INVALID_DISMISS' })
     }
   }
 }
