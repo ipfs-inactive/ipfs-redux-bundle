@@ -1,9 +1,8 @@
-/* global jest, it, describe, afterEach, beforeAll, afterAll, expect */
+/* global jest, it, describe, beforeEach, afterEach, expect */
 const { composeBundlesRaw } = require('redux-bundler')
 const ipfsBundle = require('./index')
-const IPFSFactory = require('ipfsd-ctl')
+const nock = require('nock')
 
-const f = IPFSFactory.create()
 const longTimeout = 50 * 1000
 
 describe('window.ipfs', () => {
@@ -106,39 +105,31 @@ describe('window.ipfs', () => {
 })
 
 describe('js-ipfs-api', () => {
-  let ipfsd
-  let apiAddr
-  let id
+  const idResponse = { 'ID': 'QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', 'PublicKey': 'CAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq2cwYuiR/ZfSWaIXdFhrXz5c+c7W3SmQ5N2wWl4du05YUV63qYlGLNqVP0vyM6IJYPHAqsNT3yT8h9kMr/aSExLctRoYk9K6wf6xpNTltJdNdFunOWjba44s2du/jeYClJsNV3egnUddJV/jpjLPRYbELdbA40rucQ7jYu9QwNKlJ5EHE6m4nLPYLyq0mCPSpm9XOKhuKio3gRQfyo4r9nobZ3gSy/t9/n4tQmNh6GNlgi6O1pKvN1jZ6Pf0dLUlwhHjblftzyYbzyIfHlzt7OU7O8P7BHhNavUn1HOhP3l6OIN5eEtlb30wT6ZT6PsWKqrwMotLD7gBhmiLfny9rAgMBAAE=', 'Addresses': ['/ip4/127.0.0.1/tcp/4002/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', '/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8', '/ip4/192.168.1.106/tcp/4002/ipfs/QmNTAZYQ5rtaoFtryAX2h9dycuBjhVgXtjPVZNYuMHMBw8'], 'AgentVersion': 'js-ipfs/0.32.0', 'ProtocolVersion': '9000' }
 
-  beforeAll((done) => {
-    f.spawn({ initOptions: { bits: 1024 } }, async (err, _ipfsd) => {
-      expect(err).toBe(null)
-      ipfsd = _ipfsd
-      apiAddr = ipfsd.apiAddr.toString()
-      id = await ipfsd.api.id()
-      done()
-    })
-  }, longTimeout)
-
-  afterAll((done) => {
-    if (!ipfsd) return done()
-    ipfsd.stop(done)
-  }, longTimeout)
+  beforeEach(() => {
+    nock('http://localhost:5001')
+      .post('/api/v0/id?stream-channels=true')
+      .reply(200, idResponse, {
+        'Content-Type': 'application/json'
+      })
+  })
 
   afterEach(() => {
+    nock.cleanAll()
     global.ipfs = undefined
     global.browser = undefined
   })
 
   it('Should connect via js-ipfs-api when window.ipfs is not present', (done) => {
     const store = composeBundlesRaw(
-      ipfsBundle({ defaultApiAddress: apiAddr })
+      ipfsBundle()
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
-      expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsIdentity().id).toEqual(idResponse.ID)
       expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
@@ -154,13 +145,13 @@ describe('js-ipfs-api', () => {
     }
 
     const store = composeBundlesRaw(
-      ipfsBundle({ tryWindow: false, defaultApiAddress: apiAddr })
+      ipfsBundle({ tryWindow: false })
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
-      expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsIdentity().id).toEqual(idResponse.ID)
       expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
@@ -176,13 +167,13 @@ describe('js-ipfs-api', () => {
     }
 
     const store = composeBundlesRaw(
-      ipfsBundle({ defaultApiAddress: apiAddr })
+      ipfsBundle()
     )()
 
     expect(store.selectIpfsReady()).toBe(false)
     store.subscribeToSelectors(['selectIpfsReady'], () => {
       expect(store.selectIpfsReady()).toBe(true)
-      expect(store.selectIpfsIdentity()).toEqual(id)
+      expect(store.selectIpfsIdentity().id).toEqual(idResponse.ID)
       expect(store.selectIpfsProvider()).toBe('js-ipfs-api')
       done()
     })
