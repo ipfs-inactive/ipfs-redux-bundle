@@ -60,11 +60,15 @@ Adds the following methods to the redux store.
 
 #### `store.selectIpfsReady()`
 
-- `boolean` - Is the IPFS instance ready to use yet?.
+- `boolean` - Is the IPFS instance ready to use yet?
 
 #### `store.selectIpfsInitFailed()`
 
-- `boolean` - Did the IPFS instance fail to start?.
+- `boolean` - Did the IPFS instance fail to start?
+
+#### `store.selectIpfsInvalidAddress()`
+
+- `boolean` - Is the last API Address you tried to use invalid?
 
 #### `store.selectIpfsIdentity()`
 
@@ -89,6 +93,10 @@ Adds the following methods to the redux store.
 ### `store.doUpdateIpfsApiAddress(address)`
 
 - Updates the API Address to `address`.
+
+### `store.doDismissIpfsInvalidAddress()`
+
+- Dismisses the invalid address error.
 
 ## Contribute
 
