@@ -90,11 +90,11 @@ Adds the following methods to the redux store.
 
 - Stops the IPFS instance. It is only intended to use with `js-ipfs`.
 
-### `store.doUpdateIpfsApiAddress(address)`
+#### `store.doUpdateIpfsApiAddress(address)`
 
 - Updates the API Address to `address`.
 
-### `store.doDismissIpfsInvalidAddress()`
+#### `store.doDismissIpfsInvalidAddress()`
 
 - Dismisses the invalid address error.
 
