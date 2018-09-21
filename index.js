@@ -100,23 +100,23 @@ module.exports = (opts = {}) => {
       state = state || defaultState
 
       if (type === 'IPFS_INIT_STARTED') {
-        return Object.assign({}, state, { failed: false, invalidAddress: false })
+        return Object.assign({}, state, { ready: false })
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        return Object.assign({}, state, { ready: true, invalidAddress: false }, payload)
+        return Object.assign({}, state, { ready: true, failed: false }, payload)
       }
 
       if (type === 'IPFS_STOPPED') {
-        return Object.assign({}, state, { ready: false, failed: false, invalidAddress: false })
+        return Object.assign({}, state, { ready: false, failed: false })
       }
 
       if (type === 'IPFS_INIT_FAILED') {
-        return Object.assign({}, state, { ready: false, failed: true, invalidAddress: false })
+        return Object.assign({}, state, { ready: false, failed: true })
       }
 
       if (type === 'IPFS_API_ADDRESS_UPDATED') {
-        return Object.assign({}, state, { ready: false, apiAddress: payload, failed: false, invalidAddress: false })
+        return Object.assign({}, state, { apiAddress: payload, invalidAddress: false })
       }
 
       if (type === 'IPFS_API_ADDRESS_INVALID') {

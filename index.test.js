@@ -5,6 +5,26 @@ const nock = require('nock')
 
 const longTimeout = 50 * 1000
 
+describe('reducer', () => {
+  it('should preserve failed state during a restart', () => {
+    const store = composeBundlesRaw(
+      ipfsBundle()
+    )()
+    store.dispatch({ type: 'IPFS_INIT_STARTED' })
+    expect(store.selectIpfsInitFailed()).toBe(false)
+    expect(store.selectIpfsReady()).toBe(false)
+    store.dispatch({ type: 'IPFS_INIT_FAILED' })
+    expect(store.selectIpfsInitFailed()).toBe(true)
+    expect(store.selectIpfsReady()).toBe(false)
+    store.dispatch({ type: 'IPFS_INIT_STARTED' })
+    expect(store.selectIpfsInitFailed()).toBe(true)
+    expect(store.selectIpfsReady()).toBe(false)
+    store.dispatch({ type: 'IPFS_INIT_FINISHED' })
+    expect(store.selectIpfsInitFailed()).toBe(false)
+    expect(store.selectIpfsReady()).toBe(true)
+  })
+})
+
 describe('window.ipfs', () => {
   afterEach(() => {
     global.ipfs = undefined
