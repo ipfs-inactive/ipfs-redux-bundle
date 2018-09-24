@@ -28,7 +28,7 @@ describe('reducer', () => {
 describe('window.ipfs', () => {
   afterEach(() => {
     global.ipfs = undefined
-    global.browser = undefined
+    global.chrome = undefined
   })
 
   it('Should fail to connect via window.ipfs when missing', (done) => {
@@ -73,13 +73,13 @@ describe('window.ipfs', () => {
       id: jest.fn().mockResolvedValue(testIdentity)
     }
 
-    // browser.runtime.getBackgroundPage().ipfsCompanion.ipfs will be present
+    // chrome.extension.getBackgroundPage().ipfsCompanion.ipfs will be present
     // only if page was loaded from a path that belongs to our browser extension
     const testWebExtIdentity = { hello: 'ipfsCompanion.ipfs' }
-    global.browser = {
-      get runtime () {
+    global.chrome = {
+      get extension () {
         return {
-          getBackgroundPage: async function () {
+          getBackgroundPage: function () {
             return {
               get ipfsCompanion () {
                 return {
@@ -108,10 +108,10 @@ describe('window.ipfs', () => {
       expect(store.selectIpfsIdentity()).toBe(testWebExtIdentity)
       expect(store.selectIpfsProvider()).toBe('window.ipfs')
       delete global.ipfs
-      global.browser = {
-        get runtime () {
+      global.chrome = {
+        get extension () {
           return {
-            getBackgroundPage: async function () {
+            getBackgroundPage: function () {
               return {
               }
             }
@@ -138,7 +138,7 @@ describe('js-ipfs-api', () => {
   afterEach(() => {
     nock.cleanAll()
     global.ipfs = undefined
-    global.browser = undefined
+    global.chrome = undefined
   })
 
   it('Should connect via js-ipfs-api when window.ipfs is not present', (done) => {
@@ -204,7 +204,7 @@ describe('js-ipfs-api', () => {
 
 describe('js-ipfs', () => {
   global.ipfs = undefined
-  global.browser = undefined
+  global.chrome = undefined
 
   it('Should connect via js-ipfs', (done) => {
     const store = composeBundlesRaw(
@@ -273,7 +273,7 @@ describe('miscellaneous', () => {
 
   beforeEach(() => {
     global.ipfs = undefined
-    global.browser = undefined
+    global.chrome = undefined
 
     nock('http://127.0.0.1:5001')
       .post('/api/v0/id?stream-channels=true')
