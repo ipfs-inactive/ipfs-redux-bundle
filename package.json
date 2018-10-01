@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/ipfs-shipyard/ipfs-redux-bundle#readme",
   "dependencies": {
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react-app": "^3.1.2",
     "ipfs-api": "^24.0.1",
     "multiaddr": "^5.0.0",
     "window-or-global": "^1.0.1"
