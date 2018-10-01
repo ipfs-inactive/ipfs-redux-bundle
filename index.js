@@ -181,9 +181,10 @@ async function tryWindow () {
   console.log('Trying window.ipfs')
 
   // Opportunistic optimizations when running from ipfs-companion (+ ipfs-desktop in future)
-  if (typeof browser === 'object') {
+  if (typeof chrome === 'object') {
     // Note: under some vendors getBackgroundPage() will return null if window is in incognito mode
-    const webExt = await browser.runtime.getBackgroundPage()
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1329304
+    const webExt = chrome.extension.getBackgroundPage()
     // If extension is ipfs-companion exposing IPFS API, use it directly for best performance
     if (webExt && webExt.ipfsCompanion && webExt.ipfsCompanion.ipfs) {
       const ipfs = webExt.ipfsCompanion.ipfs
