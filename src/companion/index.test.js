@@ -1,5 +1,5 @@
 /* global it, expect */
-import tryCompanion from './index.js'
+const tryCompanion = require('./index.js')
 
 it('Should connect to IPFS companion', async (done) => {
   // chrome.extension.getBackgroundPage().ipfsCompanion.ipfs will be present
@@ -27,5 +27,6 @@ it('Should connect to IPFS companion', async (done) => {
   }
   const res = await tryCompanion({ root, ipfsConnectionTest })
   expect(res.ipfs).toEqual(mockIpfs)
+  expect(res.provider).toEqual('ipfs-companion')
   done()
 })

@@ -1,6 +1,6 @@
 const provider = 'window.ipfs'
 
-export default async function tryWindowIpfs ({ root, ipfsConnectionTest }) {
+async function tryWindowIpfs ({ root, ipfsConnectionTest }) {
   console.log('Trying window.ipfs')
   if (root.ipfs) {
     try {
@@ -14,3 +14,5 @@ export default async function tryWindowIpfs ({ root, ipfsConnectionTest }) {
     console.log('window.ipfs not found. Consider Installing the IPFS Companion web extension - https://github.com/ipfs-shipyard/ipfs-companion')
   }
 }
+
+module.exports = tryWindowIpfs

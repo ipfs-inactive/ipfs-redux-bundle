@@ -4,13 +4,21 @@
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-api')
 const multiaddr = require('multiaddr')
+const tryCompanion = require('./companion')
+const tryWindow = require('./window.ipfs')
+const tryApi = require('./js-ipfs-api')
+const tryJsIpfs = require('./js-ipfs')
 
 const defaultOptions = {
   tryWindow: true,
   tryCompanion: true,
   tryApi: true,
   tryJsIpfs: false,
-  defaultApiAddress: '/ip4/127.0.0.1/tcp/5001'
+  defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
+  ipfsConnectionTest: (ipfs) => {
+    // ipfs connection is working if can we fetch the empty directtory.
+    return ipfs.get('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
+  }
 }
 
 module.exports = (opts) => {
@@ -44,7 +52,17 @@ module.exports = (opts) => {
       }
 
       if (type === 'IPFS_INIT_FINISHED') {
-        return Object.assign({}, state, { ready: true, failed: false }, payload)
+        // dont store ipfs in redux store!
+        ipfs = payload.ipfs
+        const opts = {
+          ready: true,
+          failed: false,
+          provider: payload.provider
+        }
+        if (payload.apiAddress) {
+          opts.apiAddress = payload.apiAddress
+        }
+        return Object.assign({}, state, opts)
       }
 
       if (type === 'IPFS_STOPPED') {
@@ -123,42 +141,32 @@ async function getIpfs (opts, { store, getState, dispatch }) {
   if (opts.tryCompanion) {
     const res = await tryCompanion({ root, ipfsConnectionTest })
     if (res) {
-      return dispatchInitFinished(res)
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
   }
   if (opts.tryWindow) {
     const res = await tryWindow({ root, ipfsConnectionTest })
     if (res) {
-      return dispatchInitFinished(res)
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
   }
   if (opts.tryApi) {
     const { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
-    const res = await tryApi({apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest})
+    const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
     if (res) {
-      return dispatchInitFinished(res)
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
   }
   if (opts.tryJsIpfs) {
     const jsIpfsOpts = getUserOpts('ipfsOpts') || {}
     const { getJsIpfs } = opts
-    const res = await tryJsIpfs({jsIpfsOpts, getJsIpfs, ipfsConnectionTest})
+    const res = await tryJsIpfs({ jsIpfsOpts, getJsIpfs, ipfsConnectionTest })
     if (res) {
-      return dispatchInitFinished('js-ipfs', res)
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
   }
   dispatch({ type: 'IPFS_INIT_FAILED' })
-}
-
-const dispatchInitFinished = (dispatch, res) => {
-  const payload = {
-    provider
-  }
-  if (apiAddress) {
-    payload.apiAddress = apiAddress
-  }
-  dispatch({ type: 'IPFS_INIT_FINISHED', payload })
 }
 
 function isMultiaddress (addr) {

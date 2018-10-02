@@ -1,5 +1,5 @@
 /* global it, expect, jest */
-import tryCompanion from './index.js'
+const tryCompanion = require('./index.js')
 
 it('Should connect to window.ipfs', async (done) => {
   const opts = {
@@ -10,6 +10,7 @@ it('Should connect to window.ipfs', async (done) => {
   }
   const res = await tryCompanion(opts)
   expect(res.ipfs).toEqual(opts.root.ipfs)
+  expect(res.provider).toEqual('window.ipfs')
   expect(opts.ipfsConnectionTest.mock.calls.length).toBe(1)
   done()
 })

@@ -1,6 +1,14 @@
 const provider = 'js-ipfs'
 
-export default async function tryJsIpfs ({ ipfsConnectionTest, getJsIpfs, jsIpfsOpts }) {
+function promiseMeJsIpfs (Ipfs, opts) {
+  return new Promise((resolve, reject) => {
+    const ipfs = new Ipfs(opts)
+    ipfs.once('ready', () => resolve(ipfs))
+    ipfs.once('error', err => reject(err))
+  })
+}
+
+async function tryJsIpfs ({ ipfsConnectionTest, getJsIpfs, jsIpfsOpts, initJsIpfs = promiseMeJsIpfs }) {
   try {
     console.log('Fetching js-ipfs')
     const Ipfs = await getJsIpfs()
@@ -15,10 +23,4 @@ export default async function tryJsIpfs ({ ipfsConnectionTest, getJsIpfs, jsIpfs
   }
 }
 
-function initJsIpfs (Ipfs, opts) {
-  return new Promise((resolve, reject) => {
-    const ipfs = new Ipfs(opts)
-    ipfs.once('ready', () => resolve(ipfs))
-    ipfs.once('error', err => reject(err))
-  })
-}
+module.exports = tryJsIpfs

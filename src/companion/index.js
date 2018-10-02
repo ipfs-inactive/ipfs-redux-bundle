@@ -1,6 +1,6 @@
 const provider = 'ipfs-companion'
 
-export default async function tryCompanion ({ root, ipfsConnectionTest }) {
+async function tryCompanion ({ root, ipfsConnectionTest }) {
   console.log('Trying IPFS Companion')
 
   // Opportunistic optimizations when running from ipfs-companion (+ ipfs-desktop in future)
@@ -20,3 +20,5 @@ export default async function tryCompanion ({ root, ipfsConnectionTest }) {
     }
   }
 }
+
+module.exports = tryCompanion

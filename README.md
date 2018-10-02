@@ -6,7 +6,12 @@
 
 See https://reduxbundler.com for more info on the wonders of redux bundles.
 
-This will try to use `window.ipfs` from [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion). If not available, tries to connect to `js-ipfs-api`. The developer can also enable `js-ipfs` as a fallback.
+This module tries to connect to IPFS via multiple providers, in order:
+
+- `ipfs-companion` the IPFS instance from [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) directly.
+- `window.ipfs` in the current page via [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion).
+- `js-ipfs-api` with either a user provided `apiAddress`, the current origin, or the default `/ip4/127.0.0.1/tcp/5001` address.
+- `js-ipfs` **disabled by default**. Pass `tryJsIpfs: true, getJsIpfs: () => Promise` to enable it. See [Enable js-ipfs](#enable-js-ipfs)
 
 ## Usage
 
@@ -22,6 +27,7 @@ import ipfsBundle from 'ipfs-redux-bundle'
 export default composeBundles(
   ipfsBundle({
     // These are the defaults:
+    tryCompanion: true,   // set false to bypass ipfs-companion verification
     tryWindow: true,      // set false to bypass window.ipfs verification
     tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
     tryJsIpfs: false,     // set true to attempt js-ipfs initialisation.
@@ -53,6 +59,20 @@ export default connect(
   App
 )
 ```
+
+### Enable js-ipfs
+
+To enable js-ipfs, intialise the bundle with the following opts
+
+```js
+  ipfsBundle({
+    tryJsIpfs: true,
+    getJsIpfs: () => import('ipfs')
+  })
+```
+
+- `tryJsIpfs` should be set to `true`
+- `getJsIpfs` should be a function that returns a promise that resolves with a `JsIpfs` constructor. This works well with [dynamic `import()`](https://developers.google.com/web/updates/2017/11/dynamic-import), so you can lazily load js-ipfs when it is needed.
 
 ## API
 
