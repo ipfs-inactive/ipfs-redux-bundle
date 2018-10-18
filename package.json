@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/ipfs-shipyard/ipfs-redux-bundle#readme",
   "dependencies": {
-    "ipfs-api": "^24.0.1",
+    "ipfs-api": "^25.0.0",
     "multiaddr": "^5.0.0",
     "uri-to-multiaddr": "^1.0.0",
     "window-or-global": "^1.0.1"
