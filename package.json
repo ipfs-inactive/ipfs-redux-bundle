@@ -25,7 +25,7 @@
   "dependencies": {
     "ipfs-api": "^25.0.0",
     "multiaddr": "^5.0.0",
-    "uri-to-multiaddr": "^1.0.0",
+    "uri-to-multiaddr": "^2.0.0",
     "window-or-global": "^1.0.1"
   },
   "devDependencies": {
