@@ -17,7 +17,7 @@ const defaultOptions = {
   defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
   ipfsConnectionTest: (ipfs) => {
     // ipfs connection is working if can we fetch the empty directtory.
-    return ipfs.get('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
+    return ipfs.files.get('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
   }
 }
 
