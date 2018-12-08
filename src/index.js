@@ -155,7 +155,7 @@ async function getIpfs (opts, { store, getState, dispatch }) {
   if (opts.tryDesktop) {
     const res = await tryDesktop({ root, ipfsConnectionTest })
     if (res) {
-      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res }) 
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
   }
   if (opts.tryApi) {
