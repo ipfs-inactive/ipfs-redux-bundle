@@ -10,6 +10,7 @@ This module tries to connect to IPFS via multiple providers, in order:
 
 - `ipfs-companion` the IPFS instance from [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) directly.
 - `window.ipfs` in the current page via [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion).
+- `ipfs-desktop` if it's running inside [IPFS Desktop](https://github.com/ipfs-shipyard/ipfs-desktop).
 - `js-ipfs-api` with either a user provided `apiAddress`, the current origin, or the default `/ip4/127.0.0.1/tcp/5001` address.
 - `js-ipfs` **disabled by default**. Pass `tryJsIpfs: true, getJsIpfs: () => Promise` to enable it. See [Enable js-ipfs](#enable-js-ipfs)
 
@@ -29,6 +30,7 @@ export default composeBundles(
     // These are the defaults:
     tryCompanion: true,   // set false to bypass ipfs-companion verification
     tryWindow: true,      // set false to bypass window.ipfs verification
+    tryDesktop: true,     // set false to bypass ipfs-desktop verification
     tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
     tryJsIpfs: false,     // set true to attempt js-ipfs initialisation.
     getJsIpfs: null       // must be set to a js-ipfs instance if tryJsIpfs is true.

@@ -6,12 +6,14 @@ const IpfsApi = require('ipfs-api')
 const multiaddr = require('multiaddr')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
+const tryDesktop = require('./desktop')
 const tryApi = require('./js-ipfs-api')
 const tryJsIpfs = require('./js-ipfs')
 
 const defaultOptions = {
   tryWindow: true,
   tryCompanion: true,
+  tryDesktop: true,
   tryApi: true,
   tryJsIpfs: false,
   defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
@@ -148,6 +150,12 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     const res = await tryWindow({ root, ipfsConnectionTest })
     if (res) {
       return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
+    }
+  }
+  if (opts.tryDesktop) {
+    const res = await tryDesktop({ root, ipfsConnectionTest })
+    if (res) {
+      return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res }) 
     }
   }
   if (opts.tryApi) {
