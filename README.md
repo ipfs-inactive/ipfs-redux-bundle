@@ -62,7 +62,7 @@ export default connect(
 
 ### Enable js-ipfs
 
-To enable js-ipfs, intialise the bundle with the following opts
+To enable js-ipfs with the [default configs](https://github.com/ipfs/js-ipfs#ipfs-constructor), initialise the bundle with the following opts:
 
 ```js
   ipfsBundle({
@@ -73,6 +73,30 @@ To enable js-ipfs, intialise the bundle with the following opts
 
 - `tryJsIpfs` should be set to `true`
 - `getJsIpfs` should be a function that returns a promise that resolves with a `JsIpfs` constructor. This works well with [dynamic `import()`](https://developers.google.com/web/updates/2017/11/dynamic-import), so you can lazily load js-ipfs when it is needed.
+
+If you want to enable js-ipfs with a custom config, initialise the bundle with the following opts:
+
+```js
+  ipfsBundle({
+    tryJsIpfs: true,
+    getJsIpfs: async () => {
+      const jsipfs = await import('ipfs')
+      const customConfig = {
+        // This is just an example, you can pass your own config
+        config: {
+          Addresses: {
+            Swarm: ['/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star']
+          }
+        }
+      }
+
+      return { JsIpfs: jsipfs, JsIpfsConfig: customConfig }
+    }
+  })
+```
+
+- `tryJsIpfs` should be set to `true`
+- `getJsIpfs` should be a function that returns an object with a `JsIpfs` constructor and the custom `JsIpfsConfig` as shown above.
 
 ## API
 

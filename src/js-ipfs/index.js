@@ -2,7 +2,16 @@ const provider = 'js-ipfs'
 
 function promiseMeJsIpfs (Ipfs, opts) {
   return new Promise((resolve, reject) => {
-    const ipfs = new Ipfs(opts)
+    let ipfs
+
+    if (typeof Ipfs === 'function') {
+      ipfs = new Ipfs(opts)
+    } else {
+      const { JsIpfs, JsIpfsConfig } = Ipfs
+      const ipfsOpts = Object.assign({}, JsIpfsConfig, opts)
+      ipfs = new JsIpfs(ipfsOpts)
+    }
+
     ipfs.once('ready', () => resolve(ipfs))
     ipfs.once('error', err => reject(err))
   })
