@@ -2,7 +2,7 @@
 /* eslint-env browser, webextensions */
 
 const root = require('window-or-global')
-const IpfsApi = require('ipfs-api')
+const IpfsApi = require('ipfs-http-client')
 const multiaddr = require('multiaddr')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
