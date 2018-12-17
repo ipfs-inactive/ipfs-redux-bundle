@@ -2,7 +2,7 @@
 /* eslint-env browser, webextensions */
 
 const root = require('window-or-global')
-const IpfsApi = require('ipfs-api')
+const IpfsApi = require('ipfs-http-client')
 const multiaddr = require('multiaddr')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
@@ -17,7 +17,7 @@ const defaultOptions = {
   defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
   ipfsConnectionTest: (ipfs) => {
     // ipfs connection is working if can we fetch the empty directtory.
-    return ipfs.files.get('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
+    return ipfs.get('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
   }
 }
 
