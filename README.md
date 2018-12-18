@@ -10,7 +10,7 @@ This module tries to connect to IPFS via multiple providers, in order:
 
 - `ipfs-companion` the IPFS instance from [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) directly.
 - `window.ipfs` in the current page via [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion).
-- `js-ipfs-api` with either a user provided `apiAddress`, the current origin, or the default `/ip4/127.0.0.1/tcp/5001` address.
+- `js-ipfs-http-client` with either a user provided `apiAddress`, the current origin, or the default `/ip4/127.0.0.1/tcp/5001` address.
 - `js-ipfs` **disabled by default**. Pass `tryJsIpfs: true, getJsIpfs: () => Promise` to enable it. See [Enable js-ipfs](#enable-js-ipfs)
 
 ## Usage
@@ -29,7 +29,7 @@ export default composeBundles(
     // These are the defaults:
     tryCompanion: true,   // set false to bypass ipfs-companion verification
     tryWindow: true,      // set false to bypass window.ipfs verification
-    tryApi: true,         // set false to bypass js-ipfs-api verification. Uses data from ipfsApi variable in localStorage
+    tryApi: true,         // set false to bypass js-ipfs-http-client verification. Uses data from ipfsApi variable in localStorage
     tryJsIpfs: false,     // set true to attempt js-ipfs initialisation.
     getJsIpfs: null       // must be set to a js-ipfs instance if tryJsIpfs is true.
   })
@@ -104,7 +104,7 @@ Adds the following methods to the redux store.
 
 #### `store.doInitIpfs()`
 
-- Create a new IPFS instance. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-api`](https://github.com/ipfs/js-ipfs-api) instance otherwise.
+- Create a new IPFS instance. This will `window.ipfs` if you have [IPFS Companion](https://github.com/ipfs-shipyard/ipfs-companion) installed, or a [`js-ipfs-http-client`](https://github.com/ipfs/js-ipfs-http-client) instance otherwise.
 
 #### `store.doStopIpfs()`
 
