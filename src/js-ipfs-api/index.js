@@ -24,6 +24,9 @@ async function tryApi ({ IpfsApi, apiAddress, defaultApiAddress, location, ipfsC
       console.log('Trying ipfs-api at current origin', originAddress)
       const res = await maybeApi({
         apiAddress: originAddress,
+        apiOpts: {
+          protocol: location.protocol.slice(0, -1)
+        },
         ipfsConnectionTest,
         IpfsApi
       })
@@ -37,9 +40,9 @@ async function tryApi ({ IpfsApi, apiAddress, defaultApiAddress, location, ipfsC
 }
 
 // Helper to construct and test an api client. Returns an js-ipfs-api instance or null
-async function maybeApi ({ apiAddress, ipfsConnectionTest, IpfsApi }) {
+async function maybeApi ({ apiAddress, apiOpts, ipfsConnectionTest, IpfsApi }) {
   try {
-    const ipfs = new IpfsApi(apiAddress)
+    const ipfs = new IpfsApi(apiAddress, apiOpts)
     await ipfsConnectionTest(ipfs)
     return { ipfs, provider, apiAddress }
   } catch (error) {
