@@ -151,8 +151,11 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     }
   }
   if (opts.tryApi) {
-    const { apiAddress, defaultApiAddress } = getState().ipfs
+    let { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
+    if (isURL(apiAddress)) {
+      apiAddress = parseURL(apiAddress)
+    }
     const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
     if (res) {
       return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
@@ -178,6 +181,20 @@ function isMultiaddress (addr) {
     multiaddr(addr)
     return true
   } catch (_) {
+    return false
+  }
+}
+
+function isURL (addr) {
+  if (addr === null || addr === undefined || typeof addr === 'undefined') {
+    return false
+  }
+
+  try {
+    // eslint-disable-next-line
+    new URL(addr)
+    return true
+  } catch (e) {
     return false
   }
 }
@@ -214,9 +231,26 @@ function saveUserOpts (key, val) {
 
 function getUserProvidedIpfsApi () {
   const ipfsApi = getUserOpts('ipfsApi')
-  if (ipfsApi && !isMultiaddress(ipfsApi)) {
+  if (ipfsApi && !isMultiaddress(ipfsApi) && !isURL(ipfsApi)) {
     console.warn(`The ipfsApi address ${ipfsApi} is invalid.`)
     return null
   }
   return ipfsApi
+}
+
+function parseURL (addr) {
+  const url = new URL(addr)
+
+  const opts = {
+    host: url.hostname,
+    port: url.port,
+    protocol: url.protocol.slice(0, -1),
+    headers: {}
+  }
+
+  if (url.username) {
+    opts.headers.authorization = `Basic ${btoa(unescape(encodeURIComponent(url.username + ':' + url.password)))}`
+  }
+
+  return opts
 }
