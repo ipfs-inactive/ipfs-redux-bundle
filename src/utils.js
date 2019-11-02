@@ -17,10 +17,6 @@ function isMultiaddress (addr) {
 }
 
 function isURL (addr) {
-  if (addr === null || addr === undefined || typeof addr === 'undefined') {
-    return false
-  }
-
   try {
     // eslint-disable-next-line
     new URL(addr)
