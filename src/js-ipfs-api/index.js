@@ -1,3 +1,4 @@
+/* eslint-env browser, webextensions */
 const toMultiaddr = require('uri-to-multiaddr')
 const { isURL } = require('../utils')
 const provider = 'js-ipfs-api'
