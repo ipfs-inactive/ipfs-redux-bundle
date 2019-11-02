@@ -115,3 +115,41 @@ it('Should use the defaultApiAddress if location fails', async (done) => {
   expect(config.protocol).toEqual('http')
   done()
 })
+
+it('Should use the apiAddress (url)', async (done) => {
+  const opts = {
+    apiAddress: 'http://1.1.1.1:1111',
+    defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
+    location: new URL('http://localhost:5001'),
+    IpfsApi: IpfsApi,
+    ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
+  }
+  const res = await tryApi(opts)
+  expect(res.apiAddress).toEqual(opts.apiAddress)
+  expect(res.provider).toEqual('js-ipfs-api')
+  expect(opts.ipfsConnectionTest.mock.calls.length).toBe(1)
+  const config = res.ipfs.getEndpointConfig()
+  expect(config.host).toEqual('1.1.1.1')
+  expect(config.port).toEqual('1111')
+  expect(config.protocol).toEqual('http')
+  done()
+})
+
+it('Should use the apiAddress (url with basic auth)', async (done) => {
+  const opts = {
+    apiAddress: 'http://user:pass@1.1.1.1:1111',
+    defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
+    location: new URL('http://localhost:5001'),
+    IpfsApi: IpfsApi,
+    ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
+  }
+  const res = await tryApi(opts)
+  expect(res.apiAddress).toEqual(opts.apiAddress)
+  expect(res.provider).toEqual('js-ipfs-api')
+  expect(opts.ipfsConnectionTest.mock.calls.length).toBe(1)
+  const config = res.ipfs.getEndpointConfig()
+  expect(config.host).toEqual('1.1.1.1')
+  expect(config.port).toEqual('1111')
+  expect(config.protocol).toEqual('http')
+  done()
+})

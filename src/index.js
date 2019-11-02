@@ -3,11 +3,11 @@
 
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-http-client')
-const multiaddr = require('multiaddr')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
 const tryApi = require('./js-ipfs-api')
 const tryJsIpfs = require('./js-ipfs')
+const { isURL, isMultiaddress } = require('./utils')
 
 const defaultOptions = {
   tryWindow: true,
@@ -153,9 +153,6 @@ async function getIpfs (opts, { store, getState, dispatch }) {
   if (opts.tryApi) {
     let { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
-    if (isURL(apiAddress)) {
-      apiAddress = parseURL(apiAddress)
-    }
     const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
     if (res) {
       return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
@@ -170,33 +167,6 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     }
   }
   dispatch({ type: 'IPFS_INIT_FAILED' })
-}
-
-function isMultiaddress (addr) {
-  if (addr === null || addr === undefined || typeof addr === 'undefined') {
-    return false
-  }
-
-  try {
-    multiaddr(addr)
-    return true
-  } catch (_) {
-    return false
-  }
-}
-
-function isURL (addr) {
-  if (addr === null || addr === undefined || typeof addr === 'undefined') {
-    return false
-  }
-
-  try {
-    // eslint-disable-next-line
-    new URL(addr)
-    return true
-  } catch (e) {
-    return false
-  }
 }
 
 function getUserOpts (key) {
@@ -236,21 +206,4 @@ function getUserProvidedIpfsApi () {
     return null
   }
   return ipfsApi
-}
-
-function parseURL (addr) {
-  const url = new URL(addr)
-
-  const opts = {
-    host: url.hostname,
-    port: url.port,
-    protocol: url.protocol.slice(0, -1),
-    headers: {}
-  }
-
-  if (url.username) {
-    opts.headers.authorization = `Basic ${btoa(unescape(encodeURIComponent(url.username + ':' + url.password)))}`
-  }
-
-  return opts
 }
