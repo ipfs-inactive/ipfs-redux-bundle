@@ -1,14 +1,14 @@
 /* global it, expect, jest */
 const tryApi = require('./index.js')
 const { URL } = require('url')
-const IpfsApi = require('ipfs-http-client')
+const ipfsClient = require('ipfs-http-client')
 
 it('Should use the apiAddress (implicit http)', async (done) => {
   const opts = {
     apiAddress: '/ip4/1.1.1.1/tcp/1111',
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('http://localhost:5001'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
   }
   const res = await tryApi(opts)
@@ -27,7 +27,7 @@ it('Should use the apiAddress (explicit https)', async (done) => {
     apiAddress: '/ip4/1.1.1.1/tcp/1111/https',
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('http://localhost:5001'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
   }
   const res = await tryApi(opts)
@@ -45,7 +45,7 @@ it('Should use the http location where hostname not localhost', async (done) => 
   const opts = {
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('http://dev.local:5001'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
   }
   const res = await tryApi(opts)
@@ -63,7 +63,7 @@ it('Should use the https location where hostname not localhost', async (done) =>
   const opts = {
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('https://dev.local:5001'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
   }
   const res = await tryApi(opts)
@@ -81,7 +81,7 @@ it('Should use the implicit/default location port', async (done) => {
   const opts = {
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('https://webui.ipfs.io'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     ipfsConnectionTest: jest.fn().mockResolvedValueOnce(true)
   }
   const res = await tryApi(opts)
@@ -99,7 +99,7 @@ it('Should use the defaultApiAddress if location fails', async (done) => {
   const opts = {
     defaultApiAddress: '/ip4/127.0.0.1/tcp/5001',
     location: new URL('http://astro.cat:5001'),
-    IpfsApi: IpfsApi,
+    ipfsClient: ipfsClient,
     // location call fails, default ok
     ipfsConnectionTest: jest.fn()
       .mockRejectedValueOnce(new Error('nope'))
