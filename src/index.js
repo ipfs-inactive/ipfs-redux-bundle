@@ -3,11 +3,11 @@
 
 const root = require('window-or-global')
 const IpfsApi = require('ipfs-http-client')
-const multiaddr = require('multiaddr')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
 const tryApi = require('./js-ipfs-api')
 const tryJsIpfs = require('./js-ipfs')
+const { isURL, isMultiaddress } = require('./utils')
 
 const defaultOptions = {
   tryWindow: true,
@@ -151,7 +151,7 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     }
   }
   if (opts.tryApi) {
-    const { apiAddress, defaultApiAddress } = getState().ipfs
+    let { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
     const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
     if (res) {
@@ -167,19 +167,6 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     }
   }
   dispatch({ type: 'IPFS_INIT_FAILED' })
-}
-
-function isMultiaddress (addr) {
-  if (addr === null || addr === undefined || typeof addr === 'undefined') {
-    return false
-  }
-
-  try {
-    multiaddr(addr)
-    return true
-  } catch (_) {
-    return false
-  }
 }
 
 function getUserOpts (key) {
@@ -214,7 +201,7 @@ function saveUserOpts (key, val) {
 
 function getUserProvidedIpfsApi () {
   const ipfsApi = getUserOpts('ipfsApi')
-  if (ipfsApi && !isMultiaddress(ipfsApi)) {
+  if (ipfsApi && !isMultiaddress(ipfsApi) && !isURL(ipfsApi)) {
     console.warn(`The ipfsApi address ${ipfsApi} is invalid.`)
     return null
   }

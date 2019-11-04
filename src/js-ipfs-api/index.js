@@ -1,4 +1,6 @@
+/* eslint-env browser, webextensions */
 const toMultiaddr = require('uri-to-multiaddr')
+const { isURL } = require('../utils')
 const provider = 'js-ipfs-api'
 
 // 1. Try user specified API address
@@ -41,13 +43,31 @@ async function tryApi ({ ipfsClient, apiAddress, defaultApiAddress, location, ip
 
 // Helper to construct and test an api client. Returns an js-ipfs-api instance or null
 async function maybeApi ({ apiAddress, apiOpts, ipfsConnectionTest, ipfsClient }) {
+  const address = isURL(apiAddress) ? parseURL(apiAddress) : apiAddress
   try {
-    const ipfs = ipfsClient(apiAddress, apiOpts)
+    const ipfs = ipfsClient(address, apiOpts)
     await ipfsConnectionTest(ipfs)
     return { ipfs, provider, apiAddress }
   } catch (error) {
     console.log('Failed to connect to ipfs-api', apiAddress)
   }
+}
+
+function parseURL (addr) {
+  const url = new URL(addr)
+
+  const opts = {
+    host: url.hostname,
+    port: url.port,
+    protocol: url.protocol.slice(0, -1),
+    headers: {}
+  }
+
+  if (url.username) {
+    opts.headers.authorization = `Basic ${btoa(unescape(encodeURIComponent(url.username + ':' + url.password)))}`
+  }
+
+  return opts
 }
 
 module.exports = tryApi
