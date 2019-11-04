@@ -151,7 +151,7 @@ async function getIpfs (opts, { store, getState, dispatch }) {
     }
   }
   if (opts.tryApi) {
-    let { apiAddress, defaultApiAddress } = getState().ipfs
+    const { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
     const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
     if (res) {
