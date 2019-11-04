@@ -4,10 +4,6 @@
 const multiaddr = require('multiaddr')
 
 function isMultiaddress (addr) {
-  if (addr === null || addr === undefined || typeof addr === 'undefined') {
-    return false
-  }
-
   try {
     multiaddr(addr)
     return true
