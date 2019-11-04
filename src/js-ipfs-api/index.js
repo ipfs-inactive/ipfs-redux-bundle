@@ -6,12 +6,12 @@ const provider = 'js-ipfs-api'
 // 1. Try user specified API address
 // 2. Try current origin
 // 3. Try default origin
-async function tryApi ({ ipfsClient, apiAddress, defaultApiAddress, location, ipfsConnectionTest }) {
+async function tryApi ({ httpClient, apiAddress, defaultApiAddress, location, ipfsConnectionTest }) {
   console.info('🎛️ Customise your js-ipfs-api options by storing a `ipfsApi` object in localStorage. e.g. localStorage.setItem(\'ipfsApi\', \'/ip4/127.0.0.1/tcp/5001\')')
   // Explicit custom apiAddress provided. Only try that.
   if (apiAddress) {
     console.log('Trying ipfs-api with custom api address', apiAddress)
-    return maybeApi({ apiAddress, ipfsConnectionTest, ipfsClient })
+    return maybeApi({ apiAddress, ipfsConnectionTest, httpClient })
   }
 
   // Current origin is not localhost:5001 so try with current origin info
@@ -30,7 +30,7 @@ async function tryApi ({ ipfsClient, apiAddress, defaultApiAddress, location, ip
           protocol: location.protocol.slice(0, -1)
         },
         ipfsConnectionTest,
-        ipfsClient
+        httpClient
       })
       if (res) return res
     }
@@ -38,14 +38,14 @@ async function tryApi ({ ipfsClient, apiAddress, defaultApiAddress, location, ip
 
   // ...otherwise try /ip4/127.0.0.1/tcp/5001
   console.log('Trying ipfs-api', defaultApiAddress)
-  return maybeApi({ apiAddress: defaultApiAddress, ipfsConnectionTest, ipfsClient })
+  return maybeApi({ apiAddress: defaultApiAddress, ipfsConnectionTest, httpClient })
 }
 
 // Helper to construct and test an api client. Returns an js-ipfs-api instance or null
-async function maybeApi ({ apiAddress, apiOpts, ipfsConnectionTest, ipfsClient }) {
+async function maybeApi ({ apiAddress, apiOpts, ipfsConnectionTest, httpClient }) {
   const address = isURL(apiAddress) ? parseURL(apiAddress) : apiAddress
   try {
-    const ipfs = ipfsClient(address, apiOpts)
+    const ipfs = httpClient(address, apiOpts)
     await ipfsConnectionTest(ipfs)
     return { ipfs, provider, apiAddress }
   } catch (error) {
