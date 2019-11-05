@@ -102,8 +102,6 @@ module.exports = (opts) => {
 
     selectIpfsInitFailed: state => state.ipfs.failed,
 
-    selectIpfsIdentity: state => state.ipfs.identity,
-
     doInitIpfs: () => async (store) => {
       await getIpfs(opts, store)
     },

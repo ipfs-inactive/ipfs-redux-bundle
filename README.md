@@ -90,10 +90,6 @@ Adds the following methods to the redux store.
 
 - `boolean` - Is the last API Address you tried to use invalid?
 
-#### `store.selectIpfsIdentity()`
-
-- `Object` - The last resolved value of `ipfs.id()`.
-
 #### `store.selectIpfsProvider()`
 
 - `string` - Can be `window.ipfs`, `js-ipfs-api` or `js-ipfs`.
