@@ -2,7 +2,7 @@
 /* eslint-env browser, webextensions */
 
 const root = require('window-or-global')
-const IpfsApi = require('ipfs-http-client')
+const httpClient = require('ipfs-http-client')
 const tryCompanion = require('./companion')
 const tryWindow = require('./window.ipfs')
 const tryApi = require('./js-ipfs-api')
@@ -113,7 +113,7 @@ module.exports = (opts) => {
     },
 
     doUpdateIpfsApiAddress: (addr) => (store) => {
-      if (!isMultiaddress(addr)) {
+      if (!isMultiaddress(addr) && !isURL(addr)) {
         store.dispatch({ type: 'IPFS_API_ADDRESS_INVALID' })
         return
       }
@@ -151,7 +151,7 @@ async function getIpfs (opts, { store, getState, dispatch }) {
   if (opts.tryApi) {
     const { apiAddress, defaultApiAddress } = getState().ipfs
     const { location } = root
-    const res = await tryApi({ apiAddress, defaultApiAddress, location, IpfsApi, ipfsConnectionTest })
+    const res = await tryApi({ apiAddress, defaultApiAddress, location, httpClient, ipfsConnectionTest })
     if (res) {
       return dispatch({ type: 'IPFS_INIT_FINISHED', payload: res })
     }
