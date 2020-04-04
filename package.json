@@ -4,6 +4,7 @@
   "description": "A redux bundle to create an IPFS instance",
   "main": "src/index.js",
   "scripts": {
+    "postinstall": "patch-package",
     "lint": "standard",
     "test": "jest"
   },
@@ -25,6 +26,7 @@
   "dependencies": {
     "ipfs-http-client": "^39.0.2",
     "multiaddr": "^7.2.0",
+    "patch-package": "6.2.2",
     "uri-to-multiaddr": "^3.0.1",
     "window-or-global": "^1.0.1"
   },
