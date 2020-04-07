@@ -90,7 +90,7 @@ it('Should use the implicit/default location port', async (done) => {
   expect(opts.ipfsConnectionTest.mock.calls.length).toBe(1)
   const config = res.ipfs.getEndpointConfig()
   expect(config.host).toEqual('webui.ipfs.io')
-  expect(config.port).toEqual('443')
+  expect(config.port).toEqual(opts.location.port)
   expect(config.protocol).toEqual('https')
   done()
 })
