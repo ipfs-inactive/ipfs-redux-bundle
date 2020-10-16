@@ -1,3 +1,12 @@
+# ⛔️ DEPRECATED
+
+This library is being deprecated and replaced with more flexible [ipfs-provider](https://github.com/ipfs-shipyard/ipfs-provider). 
+
+*This library will not be maintained.*
+
+----
+
+
 # ipfs-redux-bundle
 
 > A [redux bundle](https://reduxbundler.com/) to create an IPFS instance and pass it as an `extraArg` to other store methods.
